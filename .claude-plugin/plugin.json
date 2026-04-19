@@ -1,0 +1,8 @@
+{
+  "name": "nova-skills",
+  "description": "Personal Next.js frontend skills: accessibility review, component design, performance review, state design, and design token consistency.",
+  "version": "1.0.0",
+  "author": {
+    "name": "skybaer0804"
+  }
+}

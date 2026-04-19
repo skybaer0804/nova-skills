@@ -1,4 +1,4 @@
-# my-skills
+# nova-skills
 
 Personal Claude Code skills for Next.js frontend development.
 
@@ -13,5 +13,5 @@ Personal Claude Code skills for Next.js frontend development.
 ## Installation
 
 ```bash
-claude plugins install skybaer0804/my-skills
+claude plugins install nova-skills@nova-marketplace
 ```
