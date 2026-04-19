@@ -1,0 +1,21 @@
+{
+  "name": "nova-marketplace",
+  "owner": {
+    "name": "skybaer0804"
+  },
+  "metadata": {
+    "description": "Personal Next.js frontend skills marketplace",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "nova-skills",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/skybaer0804/nova-skills.git"
+      },
+      "description": "Personal Next.js frontend skills: accessibility, component design, performance, state, design tokens",
+      "version": "1.0.0"
+    }
+  ]
+}
