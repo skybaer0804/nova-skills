@@ -9,6 +9,9 @@ Personal Claude Code skills for Next.js frontend development.
 - `nextjs-performance-review` — Performance audit: rendering strategy, bundle, images, re-renders
 - `nextjs-state-design` — State type and location decisions (server/client/URL/local)
 - `nextjs-design-token-consistency` — Design token and Tailwind consistency review after styling
+- `nextjs-error-boundary` — Error boundary setup: error.tsx, global-error.tsx, graceful failure UI
+- `nextjs-error-logging` — Error monitoring wiring: instrumentation.ts, client boundary logging
+- `nextjs-user-logging` — User behavior tracking: page views, events, Core Web Vitals
 
 ## Installation
 
