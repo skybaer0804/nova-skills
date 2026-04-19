@@ -8,6 +8,8 @@ description: Use when implementing a page or feature in Next.js that involves li
 ## Overview
 Identify and fix performance issues in Next.js apps across rendering strategy, bundle size, image/font loading, and React re-renders.
 
+> v1.1.0: Added Partial Prerendering (PPR) and Turbopack sections.
+
 ## 1. Rendering Strategy Audit
 
 | Page Type | Best Strategy | Next.js Implementation |
@@ -112,3 +114,26 @@ const [user, posts] = await Promise.all([getUser(id), getPosts(id)])
 | LCP | < 2.5s | Large image without `priority`, slow server |
 | CLS | < 0.1 | Images without dimensions, font swap |
 | INP | < 200ms | Heavy event handlers, blocking JS |
+
+## 8. Partial Prerendering (PPR) — Next.js 15+
+
+PPR mixes static shell + dynamic holes in one request. Use when a page is mostly static but has a few dynamic sections.
+
+```tsx
+// next.config.ts
+experimental: { ppr: true }
+
+// page.tsx — static shell renders instantly
+export default function Page() {
+  return (
+    <main>
+      <StaticHeader />          {/* rendered at build time */}
+      <Suspense fallback={<Skeleton />}>
+        <DynamicUserCart />     {/* streamed dynamically */}
+      </Suspense>
+    </main>
+  )
+}
+```
+
+**Use PPR when:** hero/nav is static but cart/recommendations are user-specific.
