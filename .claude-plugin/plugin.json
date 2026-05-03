@@ -1,8 +1,20 @@
 {
   "name": "nova-skills",
-  "description": "Personal Next.js frontend skills: accessibility review, component design, performance review, state design, and design token consistency.",
-  "version": "1.1.0",
+  "description": "Personal Next.js frontend skills for Claude Code: component design, state management, accessibility, performance, error handling, logging, and TDD patterns.",
+  "version": "1.2.0",
   "author": {
     "name": "skybaer0804"
-  }
+  },
+  "homepage": "https://github.com/skybaer0804/nova-skills",
+  "repository": "https://github.com/skybaer0804/nova-skills",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "nextjs",
+    "react",
+    "frontend",
+    "tdd",
+    "accessibility",
+    "performance"
+  ]
 }

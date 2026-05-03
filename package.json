@@ -1,5 +1,14 @@
 {
   "name": "nova-skills",
   "version": "1.2.0",
-  "description": "Personal Claude Code skills for Next.js frontend development"
+  "description": "Personal Next.js frontend skills for Claude Code: component design, state management, accessibility, performance, error handling, logging, and TDD patterns.",
+  "keywords": [
+    "skills",
+    "nextjs",
+    "react",
+    "frontend",
+    "tdd",
+    "accessibility",
+    "performance"
+  ]
 }
