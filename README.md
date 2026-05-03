@@ -20,6 +20,10 @@
   - [nextjs-error-logging](#nextjs-error-logging)
   - [nextjs-user-logging](#nextjs-user-logging)
   - [nextjs-tdd](#nextjs-tdd)
+  - [nextjs-tanstack-query](#nextjs-tanstack-query)
+  - [nextjs-query-key-factory](#nextjs-query-key-factory)
+  - [nextjs-design-system-tokens](#nextjs-design-system-tokens)
+  - [nextjs-zustand](#nextjs-zustand)
 - [스킬 사용 방법](#스킬-사용-방법)
 - [스킬 적용 흐름](#스킬-적용-흐름)
 - [버전 히스토리](#버전-히스토리)
@@ -293,6 +297,88 @@ REFACTOR: 테스트를 깨지 않으면서 코드 정리
 
 ---
 
+### nextjs-tanstack-query
+
+> **언제 사용하나요?** Client Component에서 서버 데이터 페칭이 필요할 때 — `useEffect+useState` 페칭 패턴이 보일 때, mutation 후 캐시 무효화가 필요할 때, 로딩/에러 상태를 수동 관리하고 있을 때
+
+TanStack Query v5 기준 패턴을 강제합니다. v4와의 API 차이(`isPending`, `useSuspenseQuery`, `gcTime`)를 명시하고 올바른 사용을 유도합니다.
+
+**주요 내용:**
+
+| 패턴 | 내용 |
+|------|------|
+| `useQuery` | `staleTime` 필수 명시, `isPending`/`isError` 상태 처리 |
+| `useMutation` | `onSuccess`에서 `invalidateQueries` 또는 `setQueryData` |
+| Optimistic Update | `onMutate` + `onError` rollback 쌍 |
+| Suspense 연동 | `useSuspenseQuery` (v5에서 `suspense: true` 옵션 삭제됨) |
+| SSR Prefetch | `HydrationBoundary`로 Server Component → Client Component 초기 데이터 전달 |
+
+**결정 트리:** 서버 데이터이고 Client Component이면 TanStack Query. Server Component는 직접 fetch.
+
+---
+
+### nextjs-query-key-factory
+
+> **언제 사용하나요?** query key가 파일 곳곳에 인라인 문자열/배열로 흩어진 경우, 캐시 무효화 범위를 정밀하게 제어해야 할 때, 새 프로젝트에서 QueryClient를 초기 설정할 때, 테스트 간 캐시 상태가 공유될 때
+
+**주요 내용:**
+
+| 패턴 | 내용 |
+|------|------|
+| Key Factory | `userKeys.all` → `userKeys.lists()` → `userKeys.detail(id)` 계층 구조 |
+| QueryClient 싱글톤 | `app/providers.tsx`에서 생성, 서버(요청마다 새 인스턴스) / 클라이언트(한 번만) 분리 |
+| 전역 defaultOptions | `staleTime`, `retry`, `refetchOnWindowFocus` 전역 설정 |
+| 테스트 격리 | 테스트마다 `createTestQueryClient()` — 캐시 오염 방지 |
+
+**예외:** 앱 전체 쿼리가 3개 미만이면 인라인 `['entity', id]` 배열 허용.
+
+---
+
+### nextjs-design-system-tokens
+
+> **언제 사용하나요?** 디자인 시스템을 처음 구축할 때, Figma 토큰을 코드로 옮길 때, Primitive/Semantic 토큰 계층을 설계할 때, 다크모드/브랜드 변형 테마 전환을 구현할 때
+
+3계층 토큰 시스템으로 컴포넌트 코드 수정 없이 테마를 바꿀 수 있는 구조를 설계합니다.
+
+**3계층 구조:**
+
+```
+Primitive   원시값 (헥스 코드가 존재하는 유일한 곳)
+  └─ Semantic   목적 기반 CSS 변수 (컴포넌트가 참조)
+       └─ Component  컴포넌트 전용 오버라이드 (필요한 경우만)
+```
+
+**주요 내용:**
+
+| 계층 | 예시 | 역할 |
+|------|------|------|
+| Primitive | `--primitive-gray-500: #6B7280` | 원시값, 직접 참조 금지 |
+| Semantic | `--color-text-secondary: var(--primitive-gray-500)` | 목적 기반 별칭 |
+| Tailwind 연동 | `colors: { 'text-secondary': 'var(--color-text-secondary)' }` | 유틸리티 클래스 생성 |
+
+**shadcn/ui 사용 시:** 별도 시스템 생성 금지, `globals.css`의 CSS 변수 확장.
+
+---
+
+### nextjs-zustand
+
+> **언제 사용하나요?** `nextjs-state-design`에서 Zustand를 선택한 후 구현 단계 — slice 패턴으로 store를 구조화할 때, selector로 리렌더링을 최적화할 때, persist/devtools/immer 미들웨어를 연결할 때
+
+**주요 내용:**
+
+| 패턴 | 내용 |
+|------|------|
+| Slice 패턴 | 도메인별 `StateCreator`, `store/index.ts`에서 합성 |
+| Selector 최적화 | `useStore(s => s.items)` — 전체 store 구독 금지 |
+| `useShallow` | 여러 값 동시 구독 시 불필요한 리렌더링 방지 |
+| immer 미들웨어 | 중첩 상태 직접 변경 (불변성 자동 처리) |
+| persist 미들웨어 | `version` + `migrate` 필수 — 스키마 변경 시 localStorage 파싱 오류 방지 |
+| devtools | `enabled: process.env.NODE_ENV === 'development'` — prod 번들 포함 금지 |
+
+**Zustand가 맞는 경우:** 서버 데이터가 아닌, URL 반영이 불필요한, 여러 컴포넌트 간 공유 상태.
+
+---
+
 ## 스킬 사용 방법
 
 Claude Code에서 스킬은 자동으로 감지되어 적용됩니다.  
@@ -325,6 +411,18 @@ Claude Code에서 스킬은 자동으로 감지되어 적용됩니다.
 
 이 컴포넌트 테스트 코드 먼저 짜줘.
 → nextjs-tdd 스킬 자동 적용
+
+useEffect로 API 데이터 fetch하고 있어.
+→ nextjs-tanstack-query 스킬 자동 적용
+
+query key가 파일마다 다르게 쓰이고 있어.
+→ nextjs-query-key-factory 스킬 자동 적용
+
+디자인 시스템 토큰 구조를 잡아야 해.
+→ nextjs-design-system-tokens 스킬 자동 적용
+
+Zustand store를 구조화하고 싶어.
+→ nextjs-zustand 스킬 자동 적용
 ```
 
 ---
@@ -335,19 +433,23 @@ Claude Code에서 스킬은 자동으로 감지되어 적용됩니다.
 
 ```
 1. 기능 설계
-   └─ nextjs-component-design   (컴포넌트 구조 및 Server/Client 분리)
-   └─ nextjs-state-design        (상태 유형 및 위치 결정)
+   └─ nextjs-component-design      (컴포넌트 구조 및 Server/Client 분리)
+   └─ nextjs-state-design           (상태 유형 및 위치 결정)
+       ├─ nextjs-tanstack-query     (서버 데이터 페칭 — Client Component)
+       ├─ nextjs-query-key-factory  (Query Key 중앙화 + QueryClient 설정)
+       └─ nextjs-zustand            (전역 클라이언트 상태 — Slice/Selector/미들웨어)
 
 2. 테스트 작성 (TDD)
-   └─ nextjs-tdd                 (구현 전 실패하는 테스트 먼저 작성)
+   └─ nextjs-tdd                    (구현 전 실패하는 테스트 먼저 작성)
 
 3. 구현 완료 후
-   └─ nextjs-performance-review  (렌더링 전략, 번들, 이미지, 리렌더링)
-   └─ nextjs-accessibility-review (WCAG 2.1 AA 준수 여부)
+   └─ nextjs-performance-review     (렌더링 전략, 번들, 이미지, 리렌더링)
+   └─ nextjs-accessibility-review   (WCAG 2.1 AA 준수 여부)
    └─ nextjs-design-token-consistency (하드코딩 값 정리)
-   └─ nextjs-error-boundary      (오류 격리 및 복구 UI)
-   └─ nextjs-error-logging       (서버/클라이언트 오류 로깅 연결)
-   └─ nextjs-user-logging        (사용자 행동 추적 계측)
+   └─ nextjs-design-system-tokens   (디자인 시스템 토큰 계층 설계/감사)
+   └─ nextjs-error-boundary         (오류 격리 및 복구 UI)
+   └─ nextjs-error-logging          (서버/클라이언트 오류 로깅 연결)
+   └─ nextjs-user-logging           (사용자 행동 추적 계측)
 
 4. PR 제출
 ```
@@ -358,6 +460,7 @@ Claude Code에서 스킬은 자동으로 감지되어 적용됩니다.
 
 | 버전 | 변경 내용 |
 |------|-----------|
+| v1.3.0 | `nextjs-tanstack-query`, `nextjs-query-key-factory`, `nextjs-design-system-tokens`, `nextjs-zustand` 추가. `nextjs-error-boundary` 심화 개정 (render-phase 범위, global-error, Suspense 조합) |
 | v1.2.0 | `nextjs-tdd`, `nextjs-error-boundary`, `nextjs-error-logging`, `nextjs-user-logging` 추가. 전체 스킬 CSO 개선 |
 | v1.1.0 | `nextjs-performance-review`에 PPR(Partial Prerendering) 및 Turbopack 섹션 추가 |
 | v1.0.0 | 최초 릴리즈 — 5개 스킬 포함 |
