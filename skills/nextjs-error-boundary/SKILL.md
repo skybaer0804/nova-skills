@@ -1,6 +1,6 @@
 ---
 name: nextjs-error-boundary
-description: Use when adding error boundaries to a Next.js app, implementing graceful failure UI, or handling runtime errors in route segments and component trees without crashing the whole page.
+description: Use when a runtime error crashes a route segment, when error.tsx or global-error.tsx is absent, when an uncaught exception takes down the whole page, or when a widget should fail without affecting sibling components.
 ---
 
 # Next.js Error Boundary

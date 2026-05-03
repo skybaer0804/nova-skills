@@ -1,6 +1,6 @@
 ---
 name: nextjs-error-logging
-description: Use when setting up error monitoring in a Next.js app, wiring error.tsx or global-error.tsx to a logging service, or capturing unhandled client/server errors for observability.
+description: Use when errors in a Next.js app are not reaching a logging service, when Sentry or Datadog is not receiving server errors, or when server and client error logs lack digest correlation for matching related events.
 ---
 
 # Next.js Error Logging

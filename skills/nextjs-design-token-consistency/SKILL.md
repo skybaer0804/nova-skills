@@ -1,6 +1,6 @@
 ---
 name: nextjs-design-token-consistency
-description: Use after completing styling work in a Next.js project to check for hardcoded colors, spacing, or typography values that should use design tokens or Tailwind config values instead.
+description: Use after completing styling work when hardcoded colors, inline styles, arbitrary Tailwind values (e.g. text-[#6B7280], p-[12px]), or magic numbers appear instead of design tokens or Tailwind config values.
 ---
 
 # Next.js Design Token Consistency

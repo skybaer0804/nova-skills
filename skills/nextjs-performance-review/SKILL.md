@@ -8,8 +8,6 @@ description: Use when implementing a page or feature in Next.js that involves li
 ## Overview
 Identify and fix performance issues in Next.js apps across rendering strategy, bundle size, image/font loading, and React re-renders.
 
-> v1.1.0: Added Partial Prerendering (PPR) and Turbopack sections.
-
 ## 1. Rendering Strategy Audit
 
 | Page Type | Best Strategy | Next.js Implementation |

@@ -1,6 +1,6 @@
 ---
 name: nextjs-state-design
-description: Use when a Next.js feature requires state management decisions — choosing between server state, client state, URL state, or deciding where state should live in the component tree.
+description: Use when a Next.js feature requires state management decisions — when prop drilling, stale data, unnecessary re-renders, or context performance issues appear, or when choosing between server state, URL state, Zustand, or local useState.
 ---
 
 # Next.js State Design

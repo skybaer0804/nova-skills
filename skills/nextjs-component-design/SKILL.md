@@ -1,6 +1,6 @@
 ---
 name: nextjs-component-design
-description: Use when designing a new Next.js component before writing implementation code, especially when deciding between Server/Client components, props API shape, or composition strategy.
+description: Use when designing a new Next.js component before writing implementation code — when deciding Server vs Client component split, props API shape, composition strategy, or data fetching placement.
 ---
 
 # Next.js Component Design

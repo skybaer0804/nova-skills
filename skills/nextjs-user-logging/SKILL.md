@@ -1,6 +1,6 @@
 ---
 name: nextjs-user-logging
-description: Use when instrumenting user behavior in a Next.js app — tracking page views, click events, form submissions, or Core Web Vitals for analytics or product observability.
+description: Use when instrumenting user behavior in a Next.js app — tracking page views, click events, form submissions, Core Web Vitals, or route changes for analytics (PostHog, Amplitude, custom endpoint) or product observability.
 ---
 
 # Next.js User Logging
