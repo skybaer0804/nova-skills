@@ -24,6 +24,7 @@
   - [nextjs-query-key-factory](#nextjs-query-key-factory)
   - [nextjs-design-system-tokens](#nextjs-design-system-tokens)
   - [nextjs-zustand](#nextjs-zustand)
+  - [nextjs-feature-scaffold](#nextjs-feature-scaffold)
 - [스킬 사용 방법](#스킬-사용-방법)
 - [스킬 적용 흐름](#스킬-적용-흐름)
 - [버전 히스토리](#버전-히스토리)
@@ -379,6 +380,40 @@ Primitive   원시값 (헥스 코드가 존재하는 유일한 곳)
 
 ---
 
+### nextjs-feature-scaffold
+
+> **언제 사용하나요?** 새 Next.js 페이지나 기능을 만들 때 — React Query, Zustand, 커스텀 훅, ErrorBoundary를 함께 쓰는 경우 어떤 순서로 결정하고 파일을 어떻게 구조화할지 코드 작성 전에 정리할 때
+
+React Query + 도메인 훅 + Zustand + ErrorBoundary 네 가지 패턴을 올바른 순서로 조합합니다. 관심사 혼재, 잘못된 에러 경계 배치, 상태 도구 오선택을 방지합니다.
+
+**주요 내용:**
+
+| 단계 | 내용 |
+|------|------|
+| Step 1 | 상태 분류 — API 데이터 / 전역 UI 상태 / URL 상태 / 로컬 상태 결정 트리 |
+| Step 2 | Server vs Client 컴포넌트 분리 — `page.tsx`는 항상 Server Component |
+| Step 3 | 도메인 훅 설계 — React Query + Zustand selector를 하나의 훅으로 묶기 |
+| Step 4 | ErrorBoundary 배치 — `resetKeys` 연결 + Client Component 제약 처리 |
+
+**핵심 패턴 — 도메인 훅:**
+```ts
+// hooks/use-product-list.ts
+export function useProductList() {
+  const filters = useProductFilterStore((s) => s.filters)   // Zustand
+  const { data, isPending } = useQuery({
+    queryKey: productKeys.list(filters),
+    queryFn: () => fetchProducts(filters),
+    staleTime: 60_000,
+    throwOnError: true,   // ErrorBoundary로 자동 전파
+  })
+  return { products: data ?? [], isPending }
+}
+```
+
+컴포넌트는 `useProductList()` 하나만 import — `useQuery`와 `useStore`를 직접 혼용하지 않는다.
+
+---
+
 ## 스킬 사용 방법
 
 Claude Code에서 스킬은 자동으로 감지되어 적용됩니다.  
@@ -423,6 +458,9 @@ query key가 파일마다 다르게 쓰이고 있어.
 
 Zustand store를 구조화하고 싶어.
 → nextjs-zustand 스킬 자동 적용
+
+React Query + Zustand + 에러 바운더리로 페이지를 만들어야 해.
+→ nextjs-feature-scaffold 스킬 자동 적용
 ```
 
 ---
@@ -433,11 +471,13 @@ Zustand store를 구조화하고 싶어.
 
 ```
 1. 기능 설계
-   └─ nextjs-component-design      (컴포넌트 구조 및 Server/Client 분리)
-   └─ nextjs-state-design           (상태 유형 및 위치 결정)
+   └─ nextjs-feature-scaffold       (페이지/기능 전체 패턴 오케스트레이션 — 아래 스킬들의 진입점)
+       ├─ nextjs-component-design   (컴포넌트 구조 및 Server/Client 분리)
+       ├─ nextjs-state-design       (상태 유형 및 위치 결정)
        ├─ nextjs-tanstack-query     (서버 데이터 페칭 — Client Component)
        ├─ nextjs-query-key-factory  (Query Key 중앙화 + QueryClient 설정)
-       └─ nextjs-zustand            (전역 클라이언트 상태 — Slice/Selector/미들웨어)
+       ├─ nextjs-zustand            (전역 클라이언트 상태 — Slice/Selector/미들웨어)
+       └─ nextjs-error-boundary     (에러 격리 및 resetKeys 연결)
 
 2. 테스트 작성 (TDD)
    └─ nextjs-tdd                    (구현 전 실패하는 테스트 먼저 작성)
@@ -460,6 +500,7 @@ Zustand store를 구조화하고 싶어.
 
 | 버전 | 변경 내용 |
 |------|-----------|
+| v1.4.0 | `nextjs-feature-scaffold` 추가 — React Query + 도메인 훅 + Zustand + ErrorBoundary 오케스트레이션 스킬 |
 | v1.3.0 | `nextjs-tanstack-query`, `nextjs-query-key-factory`, `nextjs-design-system-tokens`, `nextjs-zustand` 추가. `nextjs-error-boundary` 심화 개정 (render-phase 범위, global-error, Suspense 조합) |
 | v1.2.0 | `nextjs-tdd`, `nextjs-error-boundary`, `nextjs-error-logging`, `nextjs-user-logging` 추가. 전체 스킬 CSO 개선 |
 | v1.1.0 | `nextjs-performance-review`에 PPR(Partial Prerendering) 및 Turbopack 섹션 추가 |
