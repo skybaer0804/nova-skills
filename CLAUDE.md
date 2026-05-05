@@ -32,9 +32,9 @@ Writing a skill without a failing test first = delete it and start over.
 
 ## What nova-skills Covers
 
-Next.js frontend skills only. Before adding a skill, ask:
+Next.js frontend skills AND AI agent protocol skills. Before adding a skill, ask:
 
-> "Would this only help someone building a Next.js frontend?"
+> "Would this help someone building a Next.js frontend OR implementing AI agent protocols (MCP, A2A, AG-UI, A2UI, UCP, AP2)?"
 
 If no → belongs in superpowers or a separate plugin.
 If yes → belongs here.
