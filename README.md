@@ -25,6 +25,14 @@
   - [nextjs-design-system-tokens](#nextjs-design-system-tokens)
   - [nextjs-zustand](#nextjs-zustand)
   - [nextjs-feature-scaffold](#nextjs-feature-scaffold)
+- [AI 에이전트 프로토콜](#ai-에이전트-프로토콜)
+  - [agent-protocol-design](#agent-protocol-design)
+  - [agent-mcp](#agent-mcp)
+  - [agent-a2a](#agent-a2a)
+  - [agent-ag-ui](#agent-ag-ui)
+  - [agent-a2ui](#agent-a2ui)
+  - [agent-ucp](#agent-ucp)
+  - [agent-ap2](#agent-ap2)
 - [스킬 사용 방법](#스킬-사용-방법)
 - [스킬 적용 흐름](#스킬-적용-흐름)
 - [버전 히스토리](#버전-히스토리)
@@ -414,6 +422,100 @@ export function useProductList() {
 
 ---
 
+## AI 에이전트 프로토콜
+
+### agent-protocol-design
+
+> **언제 사용하나요?** AI 에이전트를 새로 만들거나 기능을 추가할 때 — MCP/A2A/AG-UI/A2UI/UCP/AP2 중 어떤 프로토콜 조합이 필요한지 결정하기 전에
+
+레이어드 결정 트리로 필요한 프로토콜 조합을 선택하는 진입점 스킬.
+
+| 레이어 | 질문 |
+|--------|------|
+| Layer 1 | 에이전트가 무엇을 하는가? (도구 호출 / 에이전트 위임 / 상거래 / 결제) |
+| Layer 2 | 출력이 어디로 가는가? (프론트 스트리밍 / UI 컴포넌트 / 백엔드만) |
+| Layer 3 | 대표 조합 패턴 선택 |
+
+---
+
+### agent-mcp
+
+> **언제 사용하나요?** 에이전트가 외부 DB, API, 파일시스템, 도구에 연결해야 할 때
+
+| 항목 | 내용 |
+|------|------|
+| Transport | stdio (로컬) / HTTP+SSE (원격) |
+| TypeScript SDK | `@modelcontextprotocol/sdk` |
+| Python (ADK) | `McpToolset` + `StdioConnectionParams` |
+| 공식 문서 | https://modelcontextprotocol.io |
+
+---
+
+### agent-a2a
+
+> **언제 사용하나요?** 에이전트가 다른 에이전트에게 서브태스크를 위임하거나 멀티 에이전트 시스템을 구축할 때
+
+| 항목 | 내용 |
+|------|------|
+| 핵심 개념 | AgentCard (`/.well-known/agent-card.json`), Task, Artifact |
+| Python (ADK) | `to_a2a()` 서버 노출 + `A2AClient` 클라이언트 |
+| TypeScript | `@a2a-protocol/client` |
+| 공식 문서 | https://a2a-protocol.org/ |
+
+---
+
+### agent-ag-ui
+
+> **언제 사용하나요?** 프론트엔드에서 에이전트 실행을 실시간 스트리밍해야 할 때 — 텍스트 델타, 툴 호출 이벤트, human-in-the-loop
+
+| 항목 | 내용 |
+|------|------|
+| 표준 이벤트 | `RUN_STARTED`, `TEXT_MESSAGE_CONTENT`, `TOOL_CALL_*`, `RUN_FINISHED`, `RUN_ERROR` |
+| Python (ADK) | `ag_ui_adk` + `ADKAgent` + `add_adk_fastapi_endpoint` |
+| TypeScript | CopilotKit (`@copilotkit/react-core`, `@copilotkit/react-ui`) |
+| 공식 문서 | https://docs.ag-ui.com/ |
+
+---
+
+### agent-a2ui
+
+> **언제 사용하나요?** 에이전트가 텍스트 대신 카드/폼/버튼 같은 동적 UI 컴포넌트를 생성해야 할 때
+
+| 항목 | 내용 |
+|------|------|
+| 프리미티브 | 18개 (Card, Column, Row, Text, Button, TextField 등) |
+| 전달 방식 | AG-UI 스트림을 통해 전달 (단독 사용 불가) |
+| 핵심 패턴 | 구조(컴포넌트 트리)와 데이터 분리 — `dataModelUpdate`만으로 UI 갱신 |
+| 공식 문서 | https://a2ui.org/ |
+
+---
+
+### agent-ucp
+
+> **언제 사용하나요?** 에이전트가 전자상거래 주문을 처리해야 할 때 — 공급업체별 API 없이 표준화된 체크아웃
+
+| 항목 | 내용 |
+|------|------|
+| 핵심 개념 | Discovery Profile, CheckoutSession, Idempotency-Key |
+| Python SDK | `ucp-sdk` |
+| 주의 | 결제 필요 시 `agent-ap2`와 함께 사용 |
+| 공식 문서 | https://ucp.dev/ |
+
+---
+
+### agent-ap2
+
+> **언제 사용하나요?** 에이전트가 결제를 자율 실행할 때 — 한도/가맹점 제한 가드레일, 암호화 서명, 감사 추적 필요 시
+
+| 항목 | 내용 |
+|------|------|
+| 3단계 | IntentMandate (가드레일) → PaymentMandate (결제 권한) → PaymentReceipt (감사 추적) |
+| Python SDK | `ap2-sdk` |
+| 주의 | UCP 없이 단독 사용 불가 |
+| 공식 문서 | https://ap2-protocol.org/ |
+
+---
+
 ## 스킬 사용 방법
 
 Claude Code에서 스킬은 자동으로 감지되어 적용됩니다.  
@@ -461,6 +563,27 @@ Zustand store를 구조화하고 싶어.
 
 React Query + Zustand + 에러 바운더리로 페이지를 만들어야 해.
 → nextjs-feature-scaffold 스킬 자동 적용
+
+AI 에이전트 만들려는데 어떤 프로토콜 써야 할지 모르겠어.
+→ agent-protocol-design 스킬 자동 적용
+
+에이전트에서 DB나 외부 API 연결이 필요해.
+→ agent-mcp 스킬 자동 적용
+
+에이전트끼리 통신하는 멀티 에이전트 시스템 만들어야 해.
+→ agent-a2a 스킬 자동 적용
+
+Next.js에서 에이전트 응답을 실시간으로 스트리밍해야 해.
+→ agent-ag-ui 스킬 자동 적용
+
+에이전트가 카드나 버튼 같은 UI를 동적으로 만들어야 해.
+→ agent-a2ui 스킬 자동 적용
+
+에이전트가 자율적으로 전자상거래 주문을 처리해야 해.
+→ agent-ucp 스킬 자동 적용
+
+에이전트 결제에 한도 설정과 감사 추적이 필요해.
+→ agent-ap2 스킬 자동 적용
 ```
 
 ---
@@ -470,6 +593,15 @@ React Query + Zustand + 에러 바운더리로 페이지를 만들어야 해.
 일반적인 Next.js 기능 개발 시 권장 스킬 적용 순서:
 
 ```
+0. AI 에이전트 개발 시 (먼저 실행)
+   └─ agent-protocol-design     (어떤 프로토콜 조합 필요한지 결정 — 진입점)
+       ├─ agent-mcp             (외부 도구/DB 연결)
+       ├─ agent-a2a             (에이전트 간 통신)
+       ├─ agent-ag-ui           (프론트엔드 실시간 스트리밍)
+       ├─ agent-a2ui            (동적 UI 컴포넌트 생성)
+       ├─ agent-ucp             (전자상거래 트랜잭션)
+       └─ agent-ap2             (결제 승인 + 감사 추적)
+
 1. 기능 설계
    └─ nextjs-feature-scaffold       (페이지/기능 전체 패턴 오케스트레이션 — 아래 스킬들의 진입점)
        ├─ nextjs-component-design   (컴포넌트 구조 및 Server/Client 분리)
@@ -500,6 +632,7 @@ React Query + Zustand + 에러 바운더리로 페이지를 만들어야 해.
 
 | 버전 | 변경 내용 |
 |------|-----------|
+| v1.5.0 | AI 에이전트 프로토콜 스킬 7개 추가 (`agent-protocol-design`, `agent-mcp`, `agent-a2a`, `agent-ag-ui`, `agent-a2ui`, `agent-ucp`, `agent-ap2`). 도메인 확장 (Next.js + AI 에이전트 프로토콜) |
 | v1.4.0 | `nextjs-feature-scaffold` 추가 — React Query + 도메인 훅 + Zustand + ErrorBoundary 오케스트레이션 스킬 |
 | v1.3.0 | `nextjs-tanstack-query`, `nextjs-query-key-factory`, `nextjs-design-system-tokens`, `nextjs-zustand` 추가. `nextjs-error-boundary` 심화 개정 (render-phase 범위, global-error, Suspense 조합) |
 | v1.2.0 | `nextjs-tdd`, `nextjs-error-boundary`, `nextjs-error-logging`, `nextjs-user-logging` 추가. 전체 스킬 CSO 개선 |
