@@ -1,7 +1,7 @@
 {
   "name": "nova-skills",
-  "version": "1.2.0",
-  "description": "Personal Next.js frontend skills for Claude Code: component design, state management, accessibility, performance, error handling, logging, and TDD patterns.",
+  "version": "1.5.0",
+  "description": "Next.js frontend + AI agent protocol skills for Claude Code: component design, state management, accessibility, performance, error handling, TDD, and AI agent protocols (MCP, A2A, AG-UI, A2UI, UCP, AP2).",
   "keywords": [
     "skills",
     "nextjs",
@@ -9,6 +9,13 @@
     "frontend",
     "tdd",
     "accessibility",
-    "performance"
+    "performance",
+    "ai-agent",
+    "mcp",
+    "a2a",
+    "ag-ui",
+    "a2ui",
+    "ucp",
+    "ap2"
   ]
 }
