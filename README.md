@@ -1,9 +1,9 @@
 # nova-skills
 
-**Claude Code용 Next.js 프론트엔드 개발 스킬 모음입니다.**
+**Claude Code용 Next.js 프론트엔드 + NestJS 백엔드 + AI 에이전트 프로토콜 스킬 모음입니다.**
 
 코드를 작성하기 *전에* 올바른 결정을 내리도록 설계된 리뷰 및 설계 워크플로우를 제공합니다.  
-잘못된 렌더링 전략, 빈약한 컴포넌트 설계, 접근성 누락 등 배포 후에 발견하면 비용이 큰 문제들을 사전에 잡아냅니다.
+잘못된 렌더링 전략, 빈약한 컴포넌트 설계, 접근성 누락, 잘못된 인증 설계 등 배포 후에 발견하면 비용이 큰 문제들을 사전에 잡아냅니다.
 
 ---
 
@@ -26,6 +26,14 @@
   - [nextjs-zustand](#nextjs-zustand)
   - [nextjs-feature-scaffold](#nextjs-feature-scaffold)
   - [pnpm](#pnpm)
+- [NestJS 백엔드](#nestjs-백엔드)
+  - [nestjs-module-design](#nestjs-module-design)
+  - [nestjs-module-structure](#nestjs-module-structure)
+  - [nestjs-auth-jwt](#nestjs-auth-jwt)
+  - [nestjs-rbac](#nestjs-rbac)
+  - [nestjs-typeorm](#nestjs-typeorm)
+  - [nestjs-file-upload](#nestjs-file-upload)
+  - [nestjs-validation](#nestjs-validation)
 - [AI 에이전트 프로토콜](#ai-에이전트-프로토콜)
   - [agent-protocol-design](#agent-protocol-design)
   - [agent-mcp](#agent-mcp)
@@ -439,6 +447,94 @@ export function useProductList() {
 
 ---
 
+## NestJS 백엔드
+
+### nestjs-module-design
+
+> **언제 사용하나요?** 새 NestJS 기능을 만들기 전에 — 인증, 권한, DB, 파일 업로드, 검증 중 어떤 패턴이 필요한지 결정할 때
+
+| 질문 | 스킬 |
+|------|------|
+| 모듈 파일 구조 (Controller/Service/Entity) | `nestjs-module-structure` |
+| 로그인 / JWT 인증 | `nestjs-auth-jwt` |
+| 역할/권한 제어 | `nestjs-rbac` |
+| DB 엔티티 / 마이그레이션 | `nestjs-typeorm` |
+| 파일 업로드 / 썸네일 | `nestjs-file-upload` |
+| 요청 데이터 검증 | `nestjs-validation` |
+
+---
+
+### nestjs-module-structure
+
+> **언제 사용하나요?** 새 NestJS 기능 모듈을 만들 때 — Controller/Service/Entity/DTO 파일을 어떻게 나누고 @Module로 연결할지 결정할 때
+
+**핵심 패턴:** `@PrimaryGeneratedColumn('uuid')` + `@InjectRepository(Entity)` 주입 + `TypeOrmModule.forFeature([Entity])` 등록
+
+---
+
+### nestjs-auth-jwt
+
+> **언제 사용하나요?** NestJS에서 로그인과 JWT 인증을 구현할 때 — Passport Local Strategy, RS256 토큰 서명, JwtAuthGuard로 라우트를 보호할 때
+
+| 항목 | 내용 |
+|------|------|
+| 알고리즘 | RS256 (비대칭 키) — HS256 사용 금지 |
+| 키 관리 | `fs.readFileSync('keys/private.key')` 파일 기반 |
+| LocalStrategy | `passport-local` — 로그인 검증 담당 |
+| JwtStrategy | `algorithms: ['RS256']` 명시 필수 |
+
+---
+
+### nestjs-rbac
+
+> **언제 사용하나요?** NestJS에서 역할 기반 접근 제어를 구현할 때 — `user:read`, `texture:delete` 같은 permission 문자열로 라우트를 제한할 때
+
+| 항목 | 내용 |
+|------|------|
+| Guard 순서 | `AuthGuard('jwt')` (인증) → `PermissionsGuard` (권한) |
+| Permission | `user:delete` 같은 문자열 — `UserRole.ADMIN` 열거형 사용 금지 |
+| Role 구조 | Role 엔티티 many-to-many + `permissions: string[]` |
+
+---
+
+### nestjs-typeorm
+
+> **언제 사용하나요?** NestJS에서 TypeORM Entity를 설계하거나 MySQL 연결을 설정할 때 — `synchronize` 옵션, UUID PK, Migration을 결정할 때
+
+| 항목 | 내용 |
+|------|------|
+| PK | `@PrimaryGeneratedColumn('uuid')` |
+| synchronize | 개발에서만 `true`, 운영은 Migration |
+| 관계 로딩 | `eager: true` 금지 — 쿼리별 `relations` 명시 |
+| password | `@Column({ select: false })` 필수 |
+
+---
+
+### nestjs-file-upload
+
+> **언제 사용하나요?** NestJS에서 파일 업로드를 구현할 때 — Multer diskStorage, Sharp 썸네일 생성, 한글 파일명 RFC 5987 인코딩이 필요할 때
+
+| 항목 | 내용 |
+|------|------|
+| 저장 | `diskStorage()` — `memoryStorage()` 아님 |
+| 검증 | `file.mimetype` 화이트리스트 (확장자 검증 금지) |
+| 처리 순서 | 썸네일 생성 → 메타데이터 추출 → DB 저장 |
+| 다운로드 | `filename*=UTF-8''${encodeURIComponent(...)}` RFC 5987 |
+
+---
+
+### nestjs-validation
+
+> **언제 사용하나요?** NestJS 엔드포인트에 요청 데이터 검증을 추가할 때 — class-validator DTO 또는 ValidationPipe 전역 등록이 필요할 때
+
+| 항목 | 내용 |
+|------|------|
+| 전역 등록 | `main.ts`에 `app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }))` |
+| await | `await NestFactory.create(AppModule)` — await 누락 시 파이프 미적용 |
+| UpdateDto | `PartialType(CreateDto)` — 중복 작성 금지 |
+
+---
+
 ## AI 에이전트 프로토콜
 
 ### agent-protocol-design
@@ -584,6 +680,27 @@ React Query + Zustand + 에러 바운더리로 페이지를 만들어야 해.
 npm install 대신 pnpm 써줘.
 → pnpm 스킬 자동 적용
 
+NestJS 프로젝트 시작하는데 어디서부터 시작해야 해.
+→ nestjs-module-design 스킬 자동 적용
+
+NestJS 모듈 파일 구조를 잡아야 해.
+→ nestjs-module-structure 스킬 자동 적용
+
+NestJS JWT 로그인을 구현해야 해.
+→ nestjs-auth-jwt 스킬 자동 적용
+
+어드민만 삭제할 수 있게 권한 제어를 해야 해.
+→ nestjs-rbac 스킬 자동 적용
+
+TypeORM 엔티티 설계와 마이그레이션이 필요해.
+→ nestjs-typeorm 스킬 자동 적용
+
+이미지 파일 업로드와 썸네일 생성이 필요해.
+→ nestjs-file-upload 스킬 자동 적용
+
+NestJS 요청 데이터 검증을 DTO로 처리하고 싶어.
+→ nestjs-validation 스킬 자동 적용
+
 AI 에이전트 만들려는데 어떤 프로토콜 써야 할지 모르겠어.
 → agent-protocol-design 스킬 자동 적용
 
@@ -613,6 +730,15 @@ Next.js에서 에이전트 응답을 실시간으로 스트리밍해야 해.
 일반적인 Next.js 기능 개발 시 권장 스킬 적용 순서:
 
 ```
+0. NestJS 백엔드 개발 시 (먼저 실행)
+   └─ nestjs-module-design      (어떤 패턴 필요한지 결정 — 진입점)
+       ├─ nestjs-auth-jwt        (로그인 + RS256 JWT + Guard)
+       ├─ nestjs-rbac            (permission 문자열 접근 제어)
+       ├─ nestjs-module-structure (Controller/Service/Entity 구조)
+       ├─ nestjs-typeorm         (Entity + Migration)
+       ├─ nestjs-file-upload     (Multer + Sharp 썸네일)
+       └─ nestjs-validation      (DTO + ValidationPipe 전역)
+
 0. AI 에이전트 개발 시 (먼저 실행)
    └─ agent-protocol-design     (어떤 프로토콜 조합 필요한지 결정 — 진입점)
        ├─ agent-mcp             (외부 도구/DB 연결)
@@ -652,6 +778,7 @@ Next.js에서 에이전트 응답을 실시간으로 스트리밍해야 해.
 
 | 버전 | 변경 내용 |
 |------|-----------|
+| v1.7.0 | NestJS 백엔드 스킬 7개 추가 (`nestjs-module-design`, `nestjs-module-structure`, `nestjs-auth-jwt`, `nestjs-rbac`, `nestjs-typeorm`, `nestjs-file-upload`, `nestjs-validation`). 도메인 확장 (Next.js + NestJS + AI 에이전트 프로토콜) |
 | v1.6.0 | `pnpm` 스킬 추가 — npm 대신 pnpm 사용, 명령어 대조표, 장단점 |
 | v1.5.0 | AI 에이전트 프로토콜 스킬 7개 추가 (`agent-protocol-design`, `agent-mcp`, `agent-a2a`, `agent-ag-ui`, `agent-a2ui`, `agent-ucp`, `agent-ap2`). 도메인 확장 (Next.js + AI 에이전트 프로토콜) |
 | v1.4.0 | `nextjs-feature-scaffold` 추가 — React Query + 도메인 훅 + Zustand + ErrorBoundary 오케스트레이션 스킬 |
