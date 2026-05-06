@@ -1,6 +1,6 @@
 {
   "name": "nova-skills",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Next.js frontend + AI agent protocol skills for Claude Code: component design, state management, accessibility, performance, error handling, TDD, and AI agent protocols (MCP, A2A, AG-UI, A2UI, UCP, AP2).",
   "keywords": [
     "skills",

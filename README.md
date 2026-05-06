@@ -25,6 +25,7 @@
   - [nextjs-design-system-tokens](#nextjs-design-system-tokens)
   - [nextjs-zustand](#nextjs-zustand)
   - [nextjs-feature-scaffold](#nextjs-feature-scaffold)
+  - [pnpm](#pnpm)
 - [AI 에이전트 프로토콜](#ai-에이전트-프로토콜)
   - [agent-protocol-design](#agent-protocol-design)
   - [agent-mcp](#agent-mcp)
@@ -422,6 +423,22 @@ export function useProductList() {
 
 ---
 
+### pnpm
+
+> **언제 사용하나요?** 패키지 설치, 스크립트 실행, 프로젝트 스캐폴딩 시 — npm/yarn 대신 pnpm을 사용할 때
+
+콘텐츠 주소 기반 저장소와 하드 링크로 디스크 절약, 설치 속도 향상, 팬텀 의존성 차단.
+
+| npm 명령어 | pnpm 명령어 |
+|-----------|------------|
+| `npm install` | `pnpm install` |
+| `npm install <pkg>` | `pnpm add <pkg>` |
+| `npm run dev` | `pnpm dev` |
+| `npx create-next-app` | `pnpm create next-app` |
+| `npx <cmd>` | `pnpm dlx <cmd>` |
+
+---
+
 ## AI 에이전트 프로토콜
 
 ### agent-protocol-design
@@ -564,6 +581,9 @@ Zustand store를 구조화하고 싶어.
 React Query + Zustand + 에러 바운더리로 페이지를 만들어야 해.
 → nextjs-feature-scaffold 스킬 자동 적용
 
+npm install 대신 pnpm 써줘.
+→ pnpm 스킬 자동 적용
+
 AI 에이전트 만들려는데 어떤 프로토콜 써야 할지 모르겠어.
 → agent-protocol-design 스킬 자동 적용
 
@@ -632,6 +652,7 @@ Next.js에서 에이전트 응답을 실시간으로 스트리밍해야 해.
 
 | 버전 | 변경 내용 |
 |------|-----------|
+| v1.6.0 | `pnpm` 스킬 추가 — npm 대신 pnpm 사용, 명령어 대조표, 장단점 |
 | v1.5.0 | AI 에이전트 프로토콜 스킬 7개 추가 (`agent-protocol-design`, `agent-mcp`, `agent-a2a`, `agent-ag-ui`, `agent-a2ui`, `agent-ucp`, `agent-ap2`). 도메인 확장 (Next.js + AI 에이전트 프로토콜) |
 | v1.4.0 | `nextjs-feature-scaffold` 추가 — React Query + 도메인 훅 + Zustand + ErrorBoundary 오케스트레이션 스킬 |
 | v1.3.0 | `nextjs-tanstack-query`, `nextjs-query-key-factory`, `nextjs-design-system-tokens`, `nextjs-zustand` 추가. `nextjs-error-boundary` 심화 개정 (render-phase 범위, global-error, Suspense 조합) |
