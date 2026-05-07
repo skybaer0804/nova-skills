@@ -1,7 +1,7 @@
 {
   "name": "nova-skills",
-  "description": "Personal Next.js frontend skills for Claude Code: component design, state management, accessibility, performance, error handling, logging, and TDD patterns.",
-  "version": "1.2.0",
+  "description": "Next.js frontend + NestJS backend + React Three.js/R3F 3D + Docker + GitHub Actions + AI agent protocol skills for Claude Code.",
+  "version": "2.0.0",
   "author": {
     "name": "skybaer0804"
   },
@@ -13,8 +13,27 @@
     "nextjs",
     "react",
     "frontend",
+    "nestjs",
+    "typeorm",
+    "passport",
+    "rbac",
+    "threejs",
+    "r3f",
+    "react-three-fiber",
+    "3d",
+    "docker",
+    "docker-compose",
+    "github-actions",
+    "ci-cd",
     "tdd",
     "accessibility",
-    "performance"
+    "performance",
+    "ai-agent",
+    "mcp",
+    "a2a",
+    "ag-ui",
+    "a2ui",
+    "ucp",
+    "ap2"
   ]
 }

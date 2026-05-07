@@ -4,8 +4,8 @@
     "name": "skybaer0804"
   },
   "metadata": {
-    "description": "Personal Next.js frontend skills marketplace",
-    "version": "1.0.0"
+    "description": "Next.js + NestJS + R3F + Docker + GitHub Actions + AI agent protocol skills",
+    "version": "2.0.0"
   },
   "plugins": [
     {
@@ -14,8 +14,8 @@
         "source": "url",
         "url": "https://github.com/skybaer0804/nova-skills.git"
       },
-      "description": "Personal Next.js frontend skills: accessibility, component design, performance, state, design tokens",
-      "version": "1.1.0"
+      "description": "Next.js frontend + NestJS backend + React Three.js/R3F 3D + Docker + GitHub Actions + AI agent protocol skills for Claude Code",
+      "version": "2.0.0"
     }
   ]
 }
