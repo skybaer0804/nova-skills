@@ -26,6 +26,7 @@ React 3D 씬을 만드는가?
 | 인터랙티브 제품 쇼케이스 | three-scene-setup → three-materials → r3f-interaction |
 | 애니메이션 씬 | three-scene-setup → r3f-animation |
 | GLTF 모델 뷰어 | three-scene-setup → r3f-performance → r3f-interaction |
+| GLTF + 애니메이션 씬 | three-scene-setup → r3f-performance → r3f-animation → r3f-interaction |
 | 풀 3D 앱 | three-scene-setup → three-materials → r3f-interaction → r3f-animation → r3f-performance |
 
 ## 패키지 설치
