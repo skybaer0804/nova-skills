@@ -1,6 +1,6 @@
 # nova-skills
 
-**Claude Code용 Next.js 프론트엔드 + NestJS 백엔드 + AI 에이전트 프로토콜 스킬 모음입니다.**
+**Claude Code용 Next.js 프론트엔드 + NestJS 백엔드 + React Three.js/R3F 3D + AI 에이전트 프로토콜 스킬 모음입니다.**
 
 코드를 작성하기 *전에* 올바른 결정을 내리도록 설계된 리뷰 및 설계 워크플로우를 제공합니다.  
 잘못된 렌더링 전략, 빈약한 컴포넌트 설계, 접근성 누락, 잘못된 인증 설계 등 배포 후에 발견하면 비용이 큰 문제들을 사전에 잡아냅니다.
@@ -26,6 +26,13 @@
   - [nextjs-zustand](#nextjs-zustand)
   - [nextjs-feature-scaffold](#nextjs-feature-scaffold)
   - [pnpm](#pnpm)
+- [Three.js / R3F](#threejs--r3f)
+  - [r3f-scene-design](#r3f-scene-design)
+  - [three-scene-setup](#three-scene-setup)
+  - [three-materials](#three-materials)
+  - [r3f-interaction](#r3f-interaction)
+  - [r3f-animation](#r3f-animation)
+  - [r3f-performance](#r3f-performance)
 - [NestJS 백엔드](#nestjs-백엔드)
   - [nestjs-module-design](#nestjs-module-design)
   - [nestjs-module-structure](#nestjs-module-structure)
@@ -447,6 +454,83 @@ export function useProductList() {
 
 ---
 
+## Three.js / R3F
+
+### r3f-scene-design
+
+> **언제 사용하나요?** React에서 Three.js 씬을 만들기 전에 — Canvas, 인터랙션, 애니메이션, 성능 중 어떤 패턴이 필요한지 결정할 때
+
+| 질문 | 스킬 |
+|------|------|
+| Canvas/Camera/Light/Mesh 기초 | `three-scene-setup` |
+| Material/텍스처/PBR | `three-materials` |
+| 클릭/hover/카메라 컨트롤 | `r3f-interaction` |
+| 애니메이션(회전/스프링/GSAP) | `r3f-animation` |
+| 100개+ 오브젝트 / GLTF 로딩 | `r3f-performance` |
+
+---
+
+### three-scene-setup
+
+> **언제 사용하나요?** React Three Fiber 씬을 처음 설정할 때 — Canvas, Camera, Light, 기본 Mesh, OrbitControls가 필요할 때
+
+| 항목 | 내용 |
+|------|------|
+| 진입점 | `<Canvas>` — `new THREE.Scene()` 사용 금지 |
+| 조명 | `<ambientLight>` + `<directionalLight>` 필수 |
+| 카메라 컨트롤 | drei `<OrbitControls />` |
+| delta 사용 | `useFrame((_, delta) => ...)` — 프레임 독립적 |
+
+---
+
+### three-materials
+
+> **언제 사용하나요?** 3D 오브젝트에 PBR 재질을 적용할 때 — 금속/거친 표면, 텍스처 로딩, 환경 반사가 필요할 때
+
+| 항목 | 내용 |
+|------|------|
+| PBR 재질 | `MeshStandardMaterial` + `metalness` + `roughness` |
+| 반사 | `<Environment preset="studio">` + `envMapIntensity` |
+| 텍스처 | `useTexture` (drei) — `THREE.TextureLoader` 직접 사용 금지 |
+
+---
+
+### r3f-interaction
+
+> **언제 사용하나요?** 3D 오브젝트에 클릭/hover 이벤트를 추가할 때 — raycasting, OrbitControls, cursor 변경이 필요할 때
+
+| 항목 | 내용 |
+|------|------|
+| 이벤트 | mesh에 `onClick`, `onPointerOver`, `onPointerOut` 직접 부착 |
+| mesh 접근 | `useRef<Mesh>()` — `document.querySelector` 사용 금지 |
+| 카메라 | drei `<OrbitControls />` |
+
+---
+
+### r3f-animation
+
+> **언제 사용하나요?** 3D 오브젝트를 애니메이션할 때 — 연속 회전, 사인파 이동, 스프링 바운스, GSAP 타임라인이 필요할 때
+
+| 항목 | 내용 |
+|------|------|
+| 연속 애니메이션 | `useFrame` — `setInterval`/`requestAnimationFrame` 금지 |
+| 스프링 | `@react-spring/three` + `animated.mesh` |
+| 타임라인 | GSAP + `useEffect` + `meshRef` |
+
+---
+
+### r3f-performance
+
+> **언제 사용하나요?** 많은 3D 오브젝트를 렌더링하거나 GLTF 모델을 로딩할 때 — draw call이 높거나 로딩 깜빡임이 발생할 때
+
+| 항목 | 내용 |
+|------|------|
+| 대량 오브젝트 | `<instancedMesh>` — 100개 이상 map 렌더링 금지 |
+| GLTF 로딩 | `useGLTF` (drei) + `<Suspense>` 필수 |
+| geometry/material | `useMemo`로 한 번만 생성 |
+
+---
+
 ## NestJS 백엔드
 
 ### nestjs-module-design
@@ -727,9 +811,17 @@ Next.js에서 에이전트 응답을 실시간으로 스트리밍해야 해.
 
 ## 스킬 적용 흐름
 
-일반적인 Next.js 기능 개발 시 권장 스킬 적용 순서:
+일반적인 개발 시 권장 스킬 적용 순서:
 
 ```
+0. Three.js/R3F 3D 씬 개발 시 (먼저 실행)
+   └─ r3f-scene-design       (어떤 패턴 필요한지 결정 — 진입점)
+       ├─ three-scene-setup   (Canvas + Light + Mesh 기초)
+       ├─ three-materials     (PBR + 텍스처 + envMap)
+       ├─ r3f-interaction     (클릭/hover + OrbitControls)
+       ├─ r3f-animation       (useFrame + react-spring + GSAP)
+       └─ r3f-performance     (InstancedMesh + useGLTF + Suspense)
+
 0. NestJS 백엔드 개발 시 (먼저 실행)
    └─ nestjs-module-design      (어떤 패턴 필요한지 결정 — 진입점)
        ├─ nestjs-auth-jwt        (로그인 + RS256 JWT + Guard)
@@ -778,6 +870,7 @@ Next.js에서 에이전트 응답을 실시간으로 스트리밍해야 해.
 
 | 버전 | 변경 내용 |
 |------|-----------|
+| v1.8.0 | Three.js/R3F 3D 스킬 6개 추가 (`r3f-scene-design`, `three-scene-setup`, `three-materials`, `r3f-interaction`, `r3f-animation`, `r3f-performance`). 도메인 확장 (React 3D) |
 | v1.7.0 | NestJS 백엔드 스킬 7개 추가 (`nestjs-module-design`, `nestjs-module-structure`, `nestjs-auth-jwt`, `nestjs-rbac`, `nestjs-typeorm`, `nestjs-file-upload`, `nestjs-validation`). 도메인 확장 (Next.js + NestJS + AI 에이전트 프로토콜) |
 | v1.6.0 | `pnpm` 스킬 추가 — npm 대신 pnpm 사용, 명령어 대조표, 장단점 |
 | v1.5.0 | AI 에이전트 프로토콜 스킬 7개 추가 (`agent-protocol-design`, `agent-mcp`, `agent-a2a`, `agent-ag-ui`, `agent-a2ui`, `agent-ucp`, `agent-ap2`). 도메인 확장 (Next.js + AI 에이전트 프로토콜) |

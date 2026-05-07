@@ -1,7 +1,7 @@
 {
   "name": "nova-skills",
-  "version": "1.7.0",
-  "description": "Next.js frontend + NestJS backend + AI agent protocol skills for Claude Code: component design, state management, accessibility, performance, error handling, TDD, NestJS auth/RBAC/TypeORM, and AI agent protocols (MCP, A2A, AG-UI, A2UI, UCP, AP2).",
+  "version": "1.8.0",
+  "description": "Next.js frontend + NestJS backend + React Three.js/R3F + AI agent protocol skills for Claude Code.",
   "keywords": [
     "skills",
     "nextjs",
@@ -11,6 +11,10 @@
     "typeorm",
     "passport",
     "rbac",
+    "threejs",
+    "r3f",
+    "react-three-fiber",
+    "3d",
     "tdd",
     "accessibility",
     "performance",
