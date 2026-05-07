@@ -32,9 +32,9 @@ Writing a skill without a failing test first = delete it and start over.
 
 ## What nova-skills Covers
 
-Next.js frontend skills, NestJS backend skills, AND AI agent protocol skills. Before adding a skill, ask:
+Next.js frontend skills, NestJS backend skills, React Three.js/R3F 3D skills, AND AI agent protocol skills. Before adding a skill, ask:
 
-> "Would this help someone building a Next.js frontend, a NestJS backend, OR implementing AI agent protocols (MCP, A2A, AG-UI, A2UI, UCP, AP2)?"
+> "Would this help someone building a Next.js frontend, a NestJS backend, a React 3D scene with Three.js/R3F, OR implementing AI agent protocols (MCP, A2A, AG-UI, A2UI, UCP, AP2)?"
 
 If no → belongs in superpowers or a separate plugin.
 If yes → belongs here.
@@ -42,6 +42,8 @@ If yes → belongs here.
 **Naming conventions:**
 - `nextjs-*` — Next.js 프론트엔드 전용
 - `nestjs-*` — NestJS 백엔드 전용
+- `r3f-*` — React Three Fiber 전용 패턴 (useFrame, interaction, performance)
+- `three-*` — Three.js 개념 스킬 (scene setup, materials)
 - `agent-*` — AI 에이전트 프로토콜 전용
 - `pnpm` — 패키지 매니저 (범용)
 
@@ -83,7 +85,7 @@ description: Use after completing styling work when hardcoded colors, spacing, o
 
 ## What We Will Not Accept
 
-- Skills outside the Next.js frontend, NestJS backend, or AI agent protocol domains
+- Skills outside the Next.js frontend, NestJS backend, React Three.js/R3F, or AI agent protocol domains
 - Skills that only apply to a specific project or codebase (put those in the project's CLAUDE.md or a local skills directory)
 - Skill modifications without baseline test evidence
 - Descriptions that summarize workflow instead of triggering conditions
