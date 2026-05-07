@@ -46,6 +46,7 @@ If yes → belongs here.
 - `three-*` — Three.js 개념 스킬 (scene setup, materials)
 - `agent-*` — AI 에이전트 프로토콜 전용
 - `pnpm` — 패키지 매니저 (범용)
+- `docker-compose` — Docker Compose + Dockerfile 설정 (범용)
 
 ## Skill Quality Standards (CSO)
 

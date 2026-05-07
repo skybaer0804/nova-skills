@@ -26,6 +26,7 @@
   - [nextjs-zustand](#nextjs-zustand)
   - [nextjs-feature-scaffold](#nextjs-feature-scaffold)
   - [pnpm](#pnpm)
+  - [docker-compose](#docker-compose)
 - [Three.js / R3F](#threejs--r3f)
   - [r3f-scene-design](#r3f-scene-design)
   - [three-scene-setup](#three-scene-setup)
@@ -454,6 +455,20 @@ export function useProductList() {
 
 ---
 
+### docker-compose
+
+> **언제 사용하나요?** NestJS/Node.js 앱을 Docker Compose로 로컬에서 실행할 때 — PostgreSQL 등 DB 서비스 추가, 앱이 DB 준비 전에 시작되는 문제, 컨테이너와 호스트의 node_modules 충돌 시
+
+| 항목 | 내용 |
+|------|------|
+| DB 준비 대기 | `depends_on: condition: service_healthy` + `healthcheck` 필수 |
+| node_modules 충돌 | 볼륨에 `- /app/node_modules` 추가 (anonymous volume) |
+| 이미지 태그 | `postgres:16-alpine` — `latest` 사용 금지 |
+| Dockerfile | 멀티스테이지: `development` / `builder` / `production` |
+| 보안 | 프로덕션 스테이지에서 non-root user 필수 |
+
+---
+
 ## Three.js / R3F
 
 ### r3f-scene-design
@@ -870,6 +885,7 @@ Next.js에서 에이전트 응답을 실시간으로 스트리밍해야 해.
 
 | 버전 | 변경 내용 |
 |------|-----------|
+| v1.9.0 | `docker-compose` 스킬 추가 — NestJS + PostgreSQL 로컬 개발 설정, service_healthy, 멀티스테이지 Dockerfile |
 | v1.8.0 | Three.js/R3F 3D 스킬 6개 추가 (`r3f-scene-design`, `three-scene-setup`, `three-materials`, `r3f-interaction`, `r3f-animation`, `r3f-performance`). 도메인 확장 (React 3D) |
 | v1.7.0 | NestJS 백엔드 스킬 7개 추가 (`nestjs-module-design`, `nestjs-module-structure`, `nestjs-auth-jwt`, `nestjs-rbac`, `nestjs-typeorm`, `nestjs-file-upload`, `nestjs-validation`). 도메인 확장 (Next.js + NestJS + AI 에이전트 프로토콜) |
 | v1.6.0 | `pnpm` 스킬 추가 — npm 대신 pnpm 사용, 명령어 대조표, 장단점 |
