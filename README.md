@@ -27,6 +27,7 @@
   - [nextjs-feature-scaffold](#nextjs-feature-scaffold)
   - [pnpm](#pnpm)
   - [docker-compose](#docker-compose)
+  - [github-actions](#github-actions)
 - [Three.js / R3F](#threejs--r3f)
   - [r3f-scene-design](#r3f-scene-design)
   - [three-scene-setup](#three-scene-setup)
@@ -467,6 +468,19 @@ export function useProductList() {
 | Dockerfile | 멀티스테이지: `development` / `builder` / `production` |
 | 보안 | 프로덕션 스테이지에서 non-root user 필수 |
 
+### github-actions
+
+> **언제 사용하나요?** GitHub Actions CI/CD 워크플로우를 만들 때 — pnpm + Node.js 프로젝트에서 PR 자동 빌드 검사, main 브랜치 배포, DB가 필요한 통합 테스트 실행 시
+
+| 항목 | 내용 |
+|------|------|
+| pnpm setup | `pnpm/action-setup@v4` — `@v3` 아님 |
+| Node 캐시 | `setup-node`의 `cache: 'pnpm'` — 별도 `actions/cache` 불필요 |
+| install | `pnpm install --frozen-lockfile` 필수 |
+| 권한 | `permissions: contents: read` 명시 |
+| 중복 실행 | `concurrency` 그룹으로 PR 동일 브랜치 중복 취소 |
+| 파일 분리 | `ci.yml` (PR) / `deploy.yml` (push to main + `environment: production`) |
+
 ---
 
 ## Three.js / R3F
@@ -779,6 +793,9 @@ React Query + Zustand + 에러 바운더리로 페이지를 만들어야 해.
 npm install 대신 pnpm 써줘.
 → pnpm 스킬 자동 적용
 
+GitHub Actions CI 워크플로우 만들어줘.
+→ github-actions 스킬 자동 적용
+
 NestJS 프로젝트 시작하는데 어디서부터 시작해야 해.
 → nestjs-module-design 스킬 자동 적용
 
@@ -877,6 +894,7 @@ Next.js에서 에이전트 응답을 실시간으로 스트리밍해야 해.
    └─ nextjs-user-logging           (사용자 행동 추적 계측)
 
 4. PR 제출
+   └─ github-actions                 (CI/CD 워크플로우 — pnpm/action-setup@v4, concurrency, permissions)
 ```
 
 ---
@@ -885,6 +903,7 @@ Next.js에서 에이전트 응답을 실시간으로 스트리밍해야 해.
 
 | 버전 | 변경 내용 |
 |------|-----------|
+| v2.0.0 | `github-actions` 스킬 추가 — pnpm CI/CD 워크플로우, concurrency 그룹, permissions, service container 패턴 |
 | v1.9.0 | `docker-compose` 스킬 추가 — NestJS + PostgreSQL 로컬 개발 설정, service_healthy, 멀티스테이지 Dockerfile |
 | v1.8.0 | Three.js/R3F 3D 스킬 6개 추가 (`r3f-scene-design`, `three-scene-setup`, `three-materials`, `r3f-interaction`, `r3f-animation`, `r3f-performance`). 도메인 확장 (React 3D) |
 | v1.7.0 | NestJS 백엔드 스킬 7개 추가 (`nestjs-module-design`, `nestjs-module-structure`, `nestjs-auth-jwt`, `nestjs-rbac`, `nestjs-typeorm`, `nestjs-file-upload`, `nestjs-validation`). 도메인 확장 (Next.js + NestJS + AI 에이전트 프로토콜) |

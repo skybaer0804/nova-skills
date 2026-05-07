@@ -47,6 +47,7 @@ If yes → belongs here.
 - `agent-*` — AI 에이전트 프로토콜 전용
 - `pnpm` — 패키지 매니저 (범용)
 - `docker-compose` — Docker Compose + Dockerfile 설정 (범용)
+- `github-actions` — GitHub Actions CI/CD 워크플로우 (범용)
 
 ## Skill Quality Standards (CSO)
 
