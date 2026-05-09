@@ -19,8 +19,64 @@ Systematically verify WCAG 2.1 AA compliance in Next.js components. Catches issu
 ### ARIA
 - [ ] Interactive elements without visible text have `aria-label` or `aria-labelledby`
 - [ ] Dynamic content updates use `aria-live` (status → `polite`, errors → `assertive`)
+- [ ] Toast/snackbar uses `role="status"` (= `aria-live="polite"` + `aria-atomic="true"` in one)
+- [ ] Live region has `aria-atomic="true"` when the whole message should be read as one unit
 - [ ] Modal/dialog has `role="dialog"`, `aria-modal="true"`, focus trap on open
 - [ ] No redundant ARIA (e.g., `<button role="button">`)
+
+### Tab Composite Widget
+탭 UI는 단순 버튼이 아닌 복합 위젯 — ARIA APG 패턴 전체가 필요하다.
+
+- [ ] 탭 컨테이너: `role="tablist"` + `aria-label` (컨텍스트 이름)
+- [ ] 각 탭 버튼: `role="tab"` + `aria-selected={isActive}` + `aria-controls="panel-id"`
+- [ ] 각 패널: `role="tabpanel"` + `aria-labelledby="tab-id"` + `tabIndex={0}`
+- [ ] Roving tabindex: 활성 탭 `tabIndex={0}`, 나머지 `tabIndex={-1}`
+- [ ] ←→ 화살표 키로 탭 간 이동, Tab 키로 패널 진입
+
+```tsx
+// ✅ Tab composite widget 전체 패턴
+<div role="tablist" aria-label="상품 정보">
+  {tabs.map((tab, i) => (
+    <button
+      key={tab.id}
+      role="tab"
+      aria-selected={active === i}
+      aria-controls={`panel-${tab.id}`}
+      id={`tab-${tab.id}`}
+      tabIndex={active === i ? 0 : -1}
+      onClick={() => setActive(i)}
+      onKeyDown={handleArrowKey}
+    >
+      {tab.label}
+    </button>
+  ))}
+</div>
+{tabs.map((tab, i) => (
+  <div
+    key={tab.id}
+    role="tabpanel"
+    id={`panel-${tab.id}`}
+    aria-labelledby={`tab-${tab.id}`}
+    tabIndex={0}
+    hidden={active !== i}
+  >
+    {tab.content}
+  </div>
+))}
+```
+
+### SVG 아이콘
+- [ ] 버튼 내 장식용 SVG: `aria-hidden="true"` + `focusable="false"` — 버튼의 `aria-label`이 이름 제공
+- [ ] SVG title/desc가 있는 경우 버튼 `aria-label`과 중복 읽힘 방지 확인
+
+```tsx
+// ✅ 아이콘 전용 버튼
+<button aria-label="공유">
+  <svg aria-hidden="true" focusable="false" ...>
+    <path ... />
+  </svg>
+</button>
+```
 
 ### Keyboard Navigation
 - [ ] All interactive elements reachable by Tab
@@ -60,6 +116,10 @@ Systematically verify WCAG 2.1 AA compliance in Next.js components. Catches issu
 | Modal without focus trap | Install `focus-trap-react` or implement manually |
 | Icon-only button | Add `aria-label="Close"` or visually hidden `<span>` |
 | Placeholder as label | Add real `<label>` element |
+| Tab 버튼에 `aria-selected` 없음 | 활성 탭에 `aria-selected={true}`, 나머지 `aria-selected={false}` 필수 |
+| 탭을 Tab 키로만 이동 가능 | Roving tabindex + ←→ 화살표 키 구현 — Tab 키는 패널 진입용 |
+| SVG 아이콘에 `aria-hidden` 누락 | 버튼 안 SVG에 `aria-hidden="true"` + `focusable="false"` 추가 |
+| `aria-live` 영역 일부 텍스트만 읽힘 | `aria-atomic="true"` 추가 — 전체 메시지를 하나의 단위로 읽도록 |
 
 ## Quick Test
 Run in browser console to surface obvious issues:

@@ -95,7 +95,84 @@ Primitive를 목적에 매핑. 라이트/다크 모드 모두 여기서 정의.
 }
 ```
 
-## 3. Tailwind 연동
+## 3. 타이포그래피 시맨틱 레이어
+
+Primitive 파일에는 원시 size/weight/line-height만 있고, semantic 파일에서 용도별로 조합한다.
+
+```css
+/* styles/tokens/semantic.css — typography */
+:root {
+  /* 헤딩 (display → h5) */
+  --typography-display-size:   var(--primitive-font-size-5xl);  /* 48px */
+  --typography-display-weight: var(--primitive-font-weight-bold);
+  --typography-h1-size:        var(--primitive-font-size-4xl);  /* 36px */
+  --typography-h1-weight:      var(--primitive-font-weight-bold);
+  --typography-h2-size:        var(--primitive-font-size-3xl);  /* 30px */
+  --typography-h2-weight:      var(--primitive-font-weight-semibold);
+  --typography-h3-size:        var(--primitive-font-size-2xl);  /* 24px */
+  --typography-h4-size:        var(--primitive-font-size-xl);   /* 20px */
+  --typography-h5-size:        var(--primitive-font-size-lg);   /* 18px */
+
+  /* 본문 / 서브텍스트 */
+  --typography-body-size:      var(--primitive-font-size-md);   /* 16px */
+  --typography-body-sm-size:   var(--primitive-font-size-sm);   /* 14px */
+  --typography-caption-size:   var(--primitive-font-size-xs);   /* 12px */
+  --typography-caption-weight: var(--primitive-font-weight-medium);
+  --typography-label-size:     var(--primitive-font-size-sm);   /* 14px, 인터랙티브 */
+  --typography-label-weight:   var(--primitive-font-weight-medium);
+}
+```
+
+```ts
+// tailwind.config.ts — 타이포그래피 Tailwind 매핑
+fontSize: {
+  'display': ['var(--typography-display-size)', { fontWeight: 'var(--typography-display-weight)' }],
+  'h1':      ['var(--typography-h1-size)',      { fontWeight: 'var(--typography-h1-weight)' }],
+  'body':    ['var(--typography-body-size)',    {}],
+  'body-sm': ['var(--typography-body-sm-size)', {}],
+  'caption': ['var(--typography-caption-size)', { fontWeight: 'var(--typography-caption-weight)' }],
+  'label':   ['var(--typography-label-size)',   { fontWeight: 'var(--typography-label-weight)' }],
+}
+```
+
+**label vs caption:** label(14px, medium)은 폼 인풋 옆 인터랙티브 텍스트, caption(12px)은 타임스탬프·메타 등 passive 텍스트 — 같은 크기라도 목적이 다르므로 별도 토큰으로 분리.
+
+## 4. 컬러 강도 변형 네이밍
+
+같은 목적색을 강도 수준별로 구분할 때 `-subtle` / `-bold` 패턴을 사용한다.
+
+| 토큰 패턴 | 용도 |
+|-----------|------|
+| `--color-{name}` | 주 CTA, fill 버튼, 선택 상태 |
+| `--color-{name}-subtle` | ghost 배경, chip/tag 배경, hover 오버레이 |
+| `--color-{name}-bold` | 고강조 (destructive 확인 버튼, 포화된 상태 표시) |
+| `--color-{name}-disabled` | 비활성 — 색조를 유지해 "버튼"임을 인지 가능하게 |
+
+```css
+/* 예시 — danger 계열 */
+--color-surface-danger:        var(--primitive-red-50);   /* inline 오류 카드 배경 */
+--color-surface-danger-bold:   var(--primitive-red-500);  /* 삭제 확인 버튼 bg    */
+--color-text-danger:           var(--primitive-red-700);  /* 오류 메시지 텍스트   */
+```
+
+## 5. 브랜드 컬러 추출 방법론
+
+브랜드 컬러가 없고 로고만 있을 때:
+
+1. 로고 PNG 추출 (배경 포함, 2x) — Color Thief 또는 `sharp` / `get-pixels + quantize`로 dominant 색상 후보 3개 추출
+2. 각 후보의 WCAG 대비 확인 — 흰 배경 대비 ≥ 4.5:1 (소문자 기준) 필수
+3. 미달 시: 동일 H+S를 유지하고 L만 낮춰 대비 통과 지점 찾기
+4. 확정된 H+S로 50→900 스케일 파생 (L 10% 단위 스텝)
+5. `primitive.css`에 16진수 코드로 선언 → semantic 토큰에서 목적에 매핑
+
+```
+#3182F6 = HSL(217°, 91%, 58%) → 흰 배경 대비 ~3.2:1 (AA 미달)
+L을 45%로 낮추면 → ~5.2:1 (AA 통과) → 이 값을 interactive-primary로
+```
+
+## 6. Tailwind 연동
+
+**Tailwind 기본 팔레트 차단:** `theme.colors`를 `extend` 안에 넣으면 `text-gray-500`, `text-blue-500` 같은 primitive 직접 참조가 여전히 동작한다. semantic 토큰만 노출하려면 `extend` 밖에 선언해 기본 팔레트를 교체한다.
 
 ```ts
 // tailwind.config.ts
@@ -104,17 +181,19 @@ import type { Config } from 'tailwindcss'
 const config: Config = {
   content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}'],
   theme: {
+    colors: {                    // ← extend 안이 아닌 theme.colors 직접 선언 → 기본 팔레트 차단
+      transparent: 'transparent',
+      current: 'currentColor',
+      'text-primary':    'var(--color-text-primary)',
+      'text-secondary':  'var(--color-text-secondary)',
+      'text-disabled':   'var(--color-text-disabled)',
+      'surface-default': 'var(--color-surface-default)',
+      'surface-subtle':  'var(--color-surface-subtle)',
+      'surface-danger':  'var(--color-surface-danger)',
+      'border-default':  'var(--color-border-default)',
+      'border-focus':    'var(--color-border-focus)',
+    },
     extend: {
-      colors: {
-        'text-primary':    'var(--color-text-primary)',
-        'text-secondary':  'var(--color-text-secondary)',
-        'text-disabled':   'var(--color-text-disabled)',
-        'surface-default': 'var(--color-surface-default)',
-        'surface-subtle':  'var(--color-surface-subtle)',
-        'surface-danger':  'var(--color-surface-danger)',
-        'border-default':  'var(--color-border-default)',
-        'border-focus':    'var(--color-border-focus)',
-      },
       spacing: {
         'component-sm': 'var(--space-component-sm)',
         'component-md': 'var(--space-component-md)',
@@ -135,7 +214,7 @@ export default config
 <p className="text-gray-500">보조 텍스트</p>
 ```
 
-## 4. shadcn/ui 프로젝트
+## 7. shadcn/ui 프로젝트
 
 shadcn/ui는 자체 CSS 변수 시스템을 사용한다. 별도 시스템을 만들지 말고 확장한다.
 
@@ -163,7 +242,7 @@ shadcn/ui는 자체 CSS 변수 시스템을 사용한다. 별도 시스템을 �
 <div className="bg-background border-border">...</div>
 ```
 
-## 5. 새 토큰 추가 체크리스트
+## 8. 새 토큰 추가 체크리스트
 
 값이 2곳 이상 반복되고 기존 토큰이 없을 때:
 
@@ -182,3 +261,7 @@ shadcn/ui는 자체 CSS 변수 시스템을 사용한다. 별도 시스템을 �
 | CSS 변수 시스템과 Tailwind 확장이 공존 | 하나의 시스템으로 통일 |
 | shadcn 프로젝트에 별도 `tokens.css` 생성 | `globals.css`의 변수 확장 |
 | 다크모드 색상을 컴포넌트마다 하드코딩 | Semantic 계층에서 `@media` 블록으로 정의 |
+| `theme.extend.colors`에 semantic 토큰 추가 | `theme.colors`에 직접 선언 — 기본 팔레트 차단 |
+| 삭제 버튼과 오류 카드 배경에 같은 `--color-surface-danger` 사용 | `-bold` 변형 도입 — 카드 배경은 subtle, 버튼은 bold |
+| 타이포그래피를 `text-sm`, `text-base`만으로 표현 | semantic 레이어에 `caption`, `label`, `body-sm` 명명 — 목적 전달 |
+| 브랜드 컬러를 로고에서 그대로 추출해 사용 | WCAG 대비 확인 후 L값 조정 — 원본이 AA 미달인 경우 많음 |
