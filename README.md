@@ -923,6 +923,7 @@ Next.js에서 에이전트 응답을 실시간으로 스트리밍해야 해.
 
 | 버전 | 변경 내용 |
 |------|-----------|
+| v2.3.0 | Nova-Agent 지능 강화 — MySQL 기억의 궁전(5개 테이블), MemoryClient, MetaLearner 자가학습, FeedbackCollector, AutomationDetector, Pruner. 월간 자동화 탐지·불필요 제거 워크플로우 추가 |
 | v2.2.0 | `agent-architect-tdd-loop` 대폭 강화 — 레벨 기반 자가수정(CRITICAL/HIGH 기록 전용·MEDIUM/LOW 자유 수정), META-CHECK 중간 체크, 회고 에이전트, meta-state.md 3-파일 시스템, 자기완결 ROLE CONTRACT, 프롬프트 인젝션 방어, 사전 조사(WebSearch→context7). GitHub Actions 주간 스킬 자동 강화 워크플로우 추가 |
 | v2.1.0 | `agent-architect-tdd-loop` 스킬 추가 — Opus 4.7 설계자 + Sonnet 4.6 구현자 + 테스터 3-역할 TDD 루프, 병렬 처리, 3회 실패 시 강제 재설계 |
 | v2.0.0 | `github-actions` 스킬 추가 — pnpm CI/CD 워크플로우, concurrency 그룹, permissions, service container 패턴 |
