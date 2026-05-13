@@ -89,7 +89,8 @@ CREATE TABLE IF NOT EXISTS qa_sessions (
   bugs_found INT DEFAULT 0,
   deferred_bugs INT DEFAULT 0,
   started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  completed_at TIMESTAMP NULL
+  completed_at TIMESTAMP NULL,
+  INDEX idx_status (status)
 );
 
 CREATE TABLE IF NOT EXISTS qa_bugs (
@@ -105,7 +106,8 @@ CREATE TABLE IF NOT EXISTS qa_bugs (
   network_detail TEXT,
   status ENUM('OPEN','DEFERRED','CONFIRMED','FALSE_POSITIVE') DEFAULT 'OPEN',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (qa_session_id) REFERENCES qa_sessions(id) ON DELETE CASCADE
+  FOREIGN KEY (qa_session_id) REFERENCES qa_sessions(id) ON DELETE CASCADE,
+  INDEX idx_qa_session (qa_session_id)
 );
 
 CREATE TABLE IF NOT EXISTS qa_screenshots (
@@ -117,5 +119,7 @@ CREATE TABLE IF NOT EXISTS qa_screenshots (
   file_path VARCHAR(512) NOT NULL,
   deleted_at TIMESTAMP NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (qa_session_id) REFERENCES qa_sessions(id) ON DELETE CASCADE
+  FOREIGN KEY (qa_session_id) REFERENCES qa_sessions(id) ON DELETE CASCADE,
+  INDEX idx_qa_session (qa_session_id),
+  INDEX idx_bug_id (bug_id)
 );

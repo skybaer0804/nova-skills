@@ -20,4 +20,13 @@ describe('QA schema tables', () => {
     const [rows] = await conn.execute("SHOW TABLES LIKE 'qa_screenshots'");
     expect(rows).toHaveLength(1);
   });
+  it('qa_sessions has required columns', async () => {
+    const [rows] = await conn.execute("DESCRIBE qa_sessions");
+    const cols = rows.map(r => r.Field);
+    expect(cols).toContain('id');
+    expect(cols).toContain('url');
+    expect(cols).toContain('status');
+    expect(cols).toContain('bugs_found');
+    expect(cols).toContain('completed_at');
+  });
 });
