@@ -1,0 +1,21 @@
+services:
+  memory-db:
+    image: mysql:8.0
+    container_name: nova-memory-db
+    ports:
+      - "3377:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: nova_root
+      MYSQL_DATABASE: agent_memory
+      MYSQL_USER: nova
+      MYSQL_PASSWORD: nova_pass
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - nova-memory:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "nova", "--password=nova_pass"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+volumes:
+  nova-memory:
