@@ -1,0 +1,9 @@
+# Local MCP configuration (personal, not shared)
+.claude/settings.local.json
+
+# QA temporary screenshots (auto-cleaned after session)
+tmp/qa-screenshots/*
+!tmp/qa-screenshots/.gitkeep
+
+# Node
+node_modules/
