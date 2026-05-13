@@ -212,9 +212,12 @@ ROLE CONTRACT — ARCHITECT 🔴 CRITICAL
 ══════════════════════════════════════════
 
 ## 현재 상태 읽기 (필수)
-1. docs/arch-decisions.md — 기술 선택·불변 제약 확인
-2. docs/loop-state.md — iteration, status, last_test_result 확인
+1. docs/arch-decisions.md — SESSION_ID, 기술 선택·불변 제약 확인
+2. docs/loop-state.md — SESSION_ID, iteration, status, last_test_result 확인
 3. docs/meta-state.md — 자가수정 제안(MEDIUM/LOW) 확인 후 이번 루프에 반영
+4. DB 과거 유사 태스크 조회 (선택 🟢 LOW):
+   node scripts/memory-client.mjs similar "<태스크 키워드>"
+   → 과거 Bad Cases·진화된 규칙 참조
 
 ## Task
 [구현할 기능 또는 수정 내용]
@@ -385,6 +388,17 @@ CRITICAL/HIGH 위반 기록이 있으면: 수정하지 말고 보고서에 [HUMA
 - [위반 내용 및 상황]
 ---
 
+## DB 저장 및 세션 종료 (필수) 🟠 HIGH
+1. loop-state.md에서 SESSION_ID 읽기
+2. meta-state.md의 각 항목을 DB에 저장 (caseType: GOOD/BAD/VIOLATION/IMPROVEMENT):
+   node scripts/memory-client.mjs addcase $SESSION_ID '{"iterationNumber":N,"caseType":"BAD","role":"IMPLEMENTER","level":"MEDIUM","content":"...","impact":"..."}'
+3. 세션 완료:
+   node scripts/memory-client.mjs complete $SESSION_ID DONE
+4. 자가학습 실행:
+   node scripts/meta-learner.mjs
+5. 사용자에게 피드백 요청 (DONE 시만):
+   node scripts/collect-feedback.mjs $SESSION_ID
+
 ## 회고 보고서 출력
 형식:
 - 이번 태스크 요약 (iteration 수, 최종 결과)
@@ -399,15 +413,17 @@ CRITICAL/HIGH 위반 기록이 있으면: 수정하지 말고 보고서에 [HUMA
 
 ## 실행 체크리스트
 
-- [ ] `docs/arch-decisions.md` 초기화
-- [ ] `docs/loop-state.md` 초기화 (iteration: 1)
+- [ ] `npm run memory:up` — 기억의 궁전 MySQL 시작
+- [ ] `node scripts/memory-client.mjs init "<태스크 설명>"` → SESSION_ID 기록
+- [ ] `docs/arch-decisions.md` 초기화 (첫 줄에 `SESSION_ID: <값>` 포함)
+- [ ] `docs/loop-state.md` 초기화 (SESSION_ID 포함, iteration: 1)
 - [ ] `docs/meta-state.md` 초기화 (빈 테이블)
 - [ ] Architect 실행 → Step 0 조사 → 설계 → META-CHECK
 - [ ] Implementer 실행 (병렬 가능 태스크 확인) → META-CHECK
 - [ ] Tester 실행 → 결과 보고 → META-CHECK
 - [ ] Architect 리뷰 → next_action 결정 → META-CHECK
 - [ ] DONE이 될 때까지 반복
-- [ ] **Retrospective 에이전트 실행** → meta-improvements.md 생성 → 회고 보고서
+- [ ] **Retrospective 에이전트 실행** → DB 저장 → meta-improvements.md 생성 → 회고 보고서
 - [ ] HUMAN REVIEW REQUIRED 항목 사람이 검토
 
 ---
