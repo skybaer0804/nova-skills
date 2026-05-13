@@ -22,6 +22,11 @@ description: Use when implementing features that require architect-level design 
 ```
 [초기화] docs/loop-state.md 생성 (iteration: 1)
   ↓
+Architect — 사전 조사 (iteration = 1 또는 생소한 도메인)
+  ├─ 1. WebSearch — 개요 파악
+  ├─ 2. WebFetch  — 공식 문서 / 레퍼런스 구현 탐색
+  └─ 3. context7  — 최신 라이브러리 문서 확인
+  ↓
 Architect → 설계 + 테스트 계획 + 상태 파일 업데이트
   ↓
 Implementer(s) [독립 태스크는 병렬 실행]
@@ -60,6 +65,10 @@ Architect가 각 태스크에 적용할 테스트 타입을 결정한다:
 issue_key: auth-token-refresh          # 케밥케이스, 문제 설명
 iteration: 2                            # 동일 issue_key 반복 횟수
 status: FAIL                            # FAIL | PASS | REDESIGN
+research_done: true                     # 사전 조사 완료 여부 (iteration=1에서 필수)
+research_sources: |
+  - MDN: fetch API error handling
+  - context7: @tanstack/query v5 onError 제거됨 확인
 test_types: [unit, integration]         # 이번 루프에 적용된 테스트 타입
 last_test_result: |
   3 passed, 1 failed
@@ -83,16 +92,29 @@ You are the Architect. Read docs/loop-state.md first.
 [구현할 기능 또는 수정 내용]
 
 ## Instructions
-1. iteration = 3 AND status = FAIL이면 → REDESIGN:
-   이전 접근 방식 완전 폐기, 근본적으로 다른 설계 작성
-   issue_key에 _v2 추가, iteration을 1로 리셋
-2. 그 외 → 설계 + 테스트 계획 작성:
-   - 필요한 테스트 타입 명시 (unit 필수, 나머지는 필요 시 추가)
-   - 독립 태스크 목록 (병렬 실행 가능 여부 표시)
-   - Implementer에게 전달할 정확한 테스트 케이스 명세
-3. docs/loop-state.md 업데이트
 
-Output: 설계 문서 + 테스트 계획 + 업데이트된 상태 파일
+### Step 0: 사전 조사 (iteration = 1 이거나 research_done = false인 경우 필수)
+생소하거나 확실하지 않은 라이브러리·프로토콜·도메인이 포함되어 있으면:
+1. WebSearch — 핵심 개념 및 최신 동향 파악
+2. WebFetch  — 공식 문서 또는 레퍼런스 구현 탐색
+3. context7  — resolve-library-id → query-docs 순서로 최신 API 문서 확인
+   (버전 변경, deprecated API, 새 패턴 등 반드시 확인)
+조사 완료 후 loop-state.md에 research_done: true, research_sources 기록.
+이미 잘 아는 분야는 Step 0 생략 가능.
+
+### Step 1: 설계 또는 재설계
+- iteration = 3 AND status = FAIL → REDESIGN:
+  이전 접근 방식 완전 폐기, 근본적으로 다른 설계 작성
+  issue_key에 _v2 추가, iteration을 1로 리셋
+- 그 외 → 설계 + 테스트 계획:
+  - 필요한 테스트 타입 명시 (unit 필수, 나머지는 필요 시 추가)
+  - 독립 태스크 목록 (병렬 실행 가능 여부 표시)
+  - Implementer에게 전달할 정확한 테스트 케이스 명세
+
+### Step 2: 상태 파일 업데이트
+docs/loop-state.md 업데이트 (research_done, architect_decision, next_action)
+
+Output: 조사 요약 + 설계 문서 + 테스트 계획 + 업데이트된 상태 파일
 """
 )
 ```
@@ -157,7 +179,8 @@ Output: 테스트 결과 요약
 
 ## 실행 체크리스트
 
-- [ ] `docs/loop-state.md` 초기화 (issue_key 결정, iteration: 1)
+- [ ] `docs/loop-state.md` 초기화 (issue_key 결정, iteration: 1, research_done: false)
+- [ ] Architect 실행 → **Step 0 사전 조사** (생소 도메인 시 WebSearch → WebFetch → context7)
 - [ ] Architect 실행 → 설계 + 테스트 계획
 - [ ] Implementer 실행 (독립 태스크 병렬 실행 확인)
 - [ ] Tester 실행 → 결과 보고
@@ -169,6 +192,8 @@ Output: 테스트 결과 요약
 
 | 실수 | 수정 |
 |------|------|
+| 생소한 도메인에서 바로 설계 시작 | Step 0 먼저 — WebSearch → WebFetch → context7 순서로 조사 후 설계 |
+| context7 없이 라이브러리 버전 가정 | resolve-library-id → query-docs로 최신 API 확인 (deprecated 패턴 방지) |
 | Implementer가 구현 먼저 작성 | 엄격한 TDD: 테스트 → 실패 확인 → 최소 구현 순서 고정 |
 | 병렬 태스크가 같은 파일 수정 | 병렬화 전 공유 파일/전역 상태 여부 확인 필수 |
 | loop-state.md 없이 루프 시작 | 루프 시작 전 반드시 상태 파일 초기화 |
