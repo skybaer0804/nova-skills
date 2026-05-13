@@ -51,6 +51,7 @@
   - [agent-a2ui](#agent-a2ui)
   - [agent-ucp](#agent-ucp)
   - [agent-ap2](#agent-ap2)
+  - [agent-architect-tdd-loop](#agent-architect-tdd-loop)
 - [스킬 사용 방법](#스킬-사용-방법)
 - [스킬 적용 흐름](#스킬-적용-흐름)
 - [버전 히스토리](#버전-히스토리)
@@ -742,6 +743,21 @@ export function useProductList() {
 
 ---
 
+### agent-architect-tdd-loop
+
+> **언제 사용하나요?** Architect (Opus 4.7) → Implementer(s) (Sonnet 4.6) → Tester 루프로 기능을 구현할 때 — TDD 강제 적용, 병렬 서브태스크, 동일 이슈 3회 실패 시 강제 재설계
+
+| 항목 | 내용 |
+|------|------|
+| Architect | Opus 4.7 — 설계, 테스트 계획, 결과 리뷰 |
+| Implementer | Sonnet 4.6 — RED(실패 테스트) → GREEN(최소 구현), 독립 태스크 병렬 실행 |
+| Tester | Sonnet 4.6 — Unit → Integration → E2E 순서 실행 |
+| 루프 가드 | `iteration = 3` + `FAIL` → REDESIGN 강제 실행 |
+| 테스트 기본 | Unit 필수, 나머지는 Architect 판단 |
+| 상태 전달 | `docs/loop-state.md` 파일로 역할 간 컨텍스트 공유 |
+
+---
+
 ## 스킬 사용 방법
 
 Claude Code에서 스킬은 자동으로 감지되어 적용됩니다.  
@@ -837,6 +853,9 @@ Next.js에서 에이전트 응답을 실시간으로 스트리밍해야 해.
 
 에이전트 결제에 한도 설정과 감사 추적이 필요해.
 → agent-ap2 스킬 자동 적용
+
+설계자-구현자-테스터 루프로 기능을 TDD로 구현해야 해.
+→ agent-architect-tdd-loop 스킬 자동 적용
 ```
 
 ---
@@ -870,7 +889,8 @@ Next.js에서 에이전트 응답을 실시간으로 스트리밍해야 해.
        ├─ agent-ag-ui           (프론트엔드 실시간 스트리밍)
        ├─ agent-a2ui            (동적 UI 컴포넌트 생성)
        ├─ agent-ucp             (전자상거래 트랜잭션)
-       └─ agent-ap2             (결제 승인 + 감사 추적)
+       ├─ agent-ap2             (결제 승인 + 감사 추적)
+       └─ agent-architect-tdd-loop (Opus 설계자 + Sonnet 구현자 + 테스터 TDD 루프)
 
 1. 기능 설계
    └─ nextjs-feature-scaffold       (페이지/기능 전체 패턴 오케스트레이션 — 아래 스킬들의 진입점)
@@ -903,6 +923,7 @@ Next.js에서 에이전트 응답을 실시간으로 스트리밍해야 해.
 
 | 버전 | 변경 내용 |
 |------|-----------|
+| v2.1.0 | `agent-architect-tdd-loop` 스킬 추가 — Opus 4.7 설계자 + Sonnet 4.6 구현자 + 테스터 3-역할 TDD 루프, 병렬 처리, 3회 실패 시 강제 재설계 |
 | v2.0.0 | `github-actions` 스킬 추가 — pnpm CI/CD 워크플로우, concurrency 그룹, permissions, service container 패턴 |
 | v1.9.0 | `docker-compose` 스킬 추가 — NestJS + PostgreSQL 로컬 개발 설정, service_healthy, 멀티스테이지 Dockerfile |
 | v1.8.0 | Three.js/R3F 3D 스킬 6개 추가 (`r3f-scene-design`, `three-scene-setup`, `three-materials`, `r3f-interaction`, `r3f-animation`, `r3f-performance`). 도메인 확장 (React 3D) |
