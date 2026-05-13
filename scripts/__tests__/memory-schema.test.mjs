@@ -20,6 +20,10 @@ describe('memory schema', () => {
     const [rows] = await conn.execute("SHOW TABLES LIKE 'meta_cases'");
     expect(rows).toHaveLength(1);
   });
+  it('arch_decisions table exists', async () => {
+    const [rows] = await conn.execute("SHOW TABLES LIKE 'arch_decisions'");
+    expect(rows).toHaveLength(1);
+  });
   it('rules table exists with seeded rows', async () => {
     const [rows] = await conn.execute("SELECT COUNT(*) AS cnt FROM rules");
     expect(rows[0].cnt).toBeGreaterThan(0);
