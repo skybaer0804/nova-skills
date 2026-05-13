@@ -1,0 +1,48 @@
+name: Weekly Skill Enhancement
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # 매주 월요일 15:00 KST (06:00 UTC)
+  workflow_dispatch:      # 수동 실행
+
+concurrency:
+  group: skill-enhancement
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  enhance:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Anthropic SDK
+        run: npm install @anthropic-ai/sdk
+
+      - name: Run skill enhancement
+        id: enhance
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/enhance-skill.mjs
+
+      - name: Create Pull Request
+        if: steps.enhance.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'feat: weekly skill enhancement (${{ steps.enhance.outputs.skill_name }})'
+          title: 'feat: weekly skill enhancement — ${{ steps.enhance.outputs.skill_name }}'
+          body-path: /tmp/pr-body.md
+          branch: weekly-skill/${{ github.run_number }}
+          base: main
+          delete-branch: true
