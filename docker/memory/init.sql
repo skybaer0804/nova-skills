@@ -1,3 +1,6 @@
+CREATE DATABASE IF NOT EXISTS agent_memory CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+USE agent_memory;
+
 CREATE TABLE IF NOT EXISTS sessions (
   id VARCHAR(36) PRIMARY KEY,
   task_description TEXT,
@@ -17,13 +20,14 @@ CREATE TABLE IF NOT EXISTS iterations (
   next_action ENUM('IMPLEMENT','REDESIGN','DONE') NULL,
   research_done BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_iter (session_id, iteration_number),
   FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS arch_decisions (
   id INT AUTO_INCREMENT PRIMARY KEY,
   session_id VARCHAR(36) NOT NULL,
-  iteration_number INT NOT NULL DEFAULT 1,
+  iteration_number INT NOT NULL,
   decision_type ENUM('TECH_CHOICE','INVARIANT','DECISION_LOG','REDESIGN') NOT NULL,
   content TEXT NOT NULL,
   reason TEXT,
@@ -68,7 +72,7 @@ CREATE TABLE IF NOT EXISTS feedback (
   FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
 );
 
-INSERT INTO rules (rule_name, level, content) VALUES
+INSERT IGNORE INTO rules (rule_name, level, content) VALUES
 ('integration_test_criteria',    'MEDIUM', '모듈 경계 또는 API 레이어 변경 시 Integration 테스트 실행'),
 ('parallel_execution_threshold', 'MEDIUM', '독립 태스크 2개 이상이면 병렬 실행'),
 ('research_tool_order',          'MEDIUM', 'WebSearch → WebFetch → context7 순서로 조사'),

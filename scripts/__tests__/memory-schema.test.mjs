@@ -6,7 +6,7 @@ const DB = { host: 'localhost', port: 3377, user: 'nova', password: 'nova_pass',
 describe('memory schema', () => {
   let conn;
   beforeAll(async () => { conn = await mysql.createConnection(DB); });
-  afterAll(async () => { await conn.end(); });
+  afterAll(async () => { if (conn) await conn.end(); });
 
   it('sessions table exists', async () => {
     const [rows] = await conn.execute("SHOW TABLES LIKE 'sessions'");
@@ -26,7 +26,7 @@ describe('memory schema', () => {
   });
   it('rules table exists with seeded rows', async () => {
     const [rows] = await conn.execute("SELECT COUNT(*) AS cnt FROM rules");
-    expect(rows[0].cnt).toBeGreaterThan(0);
+    expect(rows[0].cnt).toBe(5);
   });
   it('feedback table exists', async () => {
     const [rows] = await conn.execute("SHOW TABLES LIKE 'feedback'");

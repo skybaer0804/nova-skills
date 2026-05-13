@@ -6,13 +6,11 @@
   "keywords": ["skills","nextjs","react","frontend","nestjs","typeorm","passport","rbac","threejs","r3f","react-three-fiber","3d","docker","docker-compose","tdd","accessibility","performance","ai-agent","mcp","a2a","ag-ui","a2ui","ucp","ap2"],
   "scripts": {
     "test": "vitest run",
-    "memory:up": "docker compose -f docker/memory/docker-compose.yml up -d",
+    "memory:up": "docker compose -f docker/memory/docker-compose.yml up -d --wait",
     "memory:down": "docker compose -f docker/memory/docker-compose.yml down"
   },
-  "dependencies": {
-    "mysql2": "^3.11.0"
-  },
   "devDependencies": {
+    "mysql2": "^3.11.0",
     "vitest": "^2.1.0"
   }
 }

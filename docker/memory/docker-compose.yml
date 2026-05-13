@@ -13,9 +13,10 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - nova-memory:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "nova", "--password=nova_pass"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "nova", "-pnova_pass"]
       interval: 5s
       timeout: 3s
       retries: 12
+      start_period: 30s
 volumes:
   nova-memory:
