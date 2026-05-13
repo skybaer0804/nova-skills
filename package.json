@@ -3,7 +3,32 @@
   "version": "2.3.0",
   "type": "module",
   "description": "Next.js frontend + NestJS backend + React Three.js/R3F + Docker Compose + AI agent protocol skills for Claude Code.",
-  "keywords": ["skills","nextjs","react","frontend","nestjs","typeorm","passport","rbac","threejs","r3f","react-three-fiber","3d","docker","docker-compose","tdd","accessibility","performance","ai-agent","mcp","a2a","ag-ui","a2ui","ucp","ap2"],
+  "keywords": [
+    "skills",
+    "nextjs",
+    "react",
+    "frontend",
+    "nestjs",
+    "typeorm",
+    "passport",
+    "rbac",
+    "threejs",
+    "r3f",
+    "react-three-fiber",
+    "3d",
+    "docker",
+    "docker-compose",
+    "tdd",
+    "accessibility",
+    "performance",
+    "ai-agent",
+    "mcp",
+    "a2a",
+    "ag-ui",
+    "a2ui",
+    "ucp",
+    "ap2"
+  ],
   "scripts": {
     "test": "vitest run",
     "memory:up": "docker compose -f docker/memory/docker-compose.yml up -d --wait",
@@ -12,5 +37,8 @@
   "devDependencies": {
     "mysql2": "^3.11.0",
     "vitest": "^2.1.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.95.2"
   }
 }
