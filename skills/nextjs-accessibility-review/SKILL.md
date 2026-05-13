@@ -1,6 +1,8 @@
 ---
 name: nextjs-accessibility-review
 description: Use when a Next.js component or page needs accessibility validation — before PR, when adding interactive elements, forms, modals, or navigation, or when WCAG 2.1 AA compliance, screen reader support, or keyboard navigation is required.
+created: 2026-04-19
+updated: 2026-05-09
 ---
 
 # Next.js Accessibility Review

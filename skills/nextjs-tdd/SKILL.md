@@ -1,6 +1,8 @@
 ---
 name: nextjs-tdd
 description: Use when writing or fixing tests for Next.js components, hooks, or server actions — before writing implementation code (TDD), or when tests are failing, missing, or flaky.
+created: 2026-05-03
+updated: 2026-05-03
 ---
 
 # Next.js TDD

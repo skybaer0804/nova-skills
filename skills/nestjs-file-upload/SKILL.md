@@ -1,6 +1,8 @@
 ---
 name: nestjs-file-upload
 description: Use when implementing file upload in NestJS — when configuring Multer for image storage, generating thumbnails with Sharp, or serving files with correct filename encoding for non-ASCII filenames.
+created: 2026-05-07
+updated: 2026-05-07
 ---
 
 # NestJS File Upload

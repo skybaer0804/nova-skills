@@ -1,6 +1,8 @@
 ---
 name: agent-architect-tdd-loop
 description: Use when implementing features that require architect-level design separation, TDD enforcement across multiple files, parallel sub-task execution, or loop-guarded iterative development where the same failure must not repeat more than 3 times.
+created: 2026-05-13
+updated: 2026-05-13
 ---
 
 # Agent Architect TDD Loop

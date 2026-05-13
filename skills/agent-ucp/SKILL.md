@@ -1,6 +1,8 @@
 ---
 name: agent-ucp
 description: Use when an AI agent needs to perform e-commerce transactions across vendors — when building agents that browse catalogs, create checkout sessions, or place orders using a standardized protocol regardless of the vendor's specific API.
+created: 2026-05-05
+updated: 2026-05-05
 ---
 
 # Agent UCP (Universal Commerce Protocol)

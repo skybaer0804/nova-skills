@@ -1,6 +1,8 @@
 ---
 name: r3f-scene-design
 description: Use when starting a React 3D scene with Three.js — when deciding which R3F and drei patterns are needed before writing any code.
+created: 2026-05-07
+updated: 2026-05-07
 ---
 
 # R3F Scene Design (진입점)

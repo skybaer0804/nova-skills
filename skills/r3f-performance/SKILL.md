@@ -1,6 +1,8 @@
 ---
 name: r3f-performance
 description: Use when rendering many 3D objects or loading GLTF models in React Three Fiber — when draw calls are high, models cause loading flicker, or geometry is recreated on every render.
+created: 2026-05-07
+updated: 2026-05-07
 ---
 
 # R3F Performance

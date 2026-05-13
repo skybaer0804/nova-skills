@@ -1,6 +1,8 @@
 ---
 name: agent-protocol-design
 description: Use when starting to build an AI agent or adding agent capabilities — when deciding which combination of MCP, A2A, AG-UI, A2UI, UCP, or AP2 protocols to use based on what the agent does, who it communicates with, and where its output goes.
+created: 2026-05-05
+updated: 2026-05-05
 ---
 
 # AI Agent Protocol Design

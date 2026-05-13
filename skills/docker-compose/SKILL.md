@@ -1,6 +1,8 @@
 ---
 name: docker-compose
 description: Use when setting up Docker Compose for local development with Node.js/NestJS — when adding a database service, when the app starts before the database is ready, or when node_modules conflicts occur between host and container.
+created: 2026-05-07
+updated: 2026-05-07
 ---
 
 # Docker Compose (NestJS + PostgreSQL)

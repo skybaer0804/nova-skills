@@ -1,6 +1,8 @@
 ---
 name: nestjs-rbac
 description: Use when implementing role-based access control in NestJS — when restricting routes by permissions such as user:read or texture:delete, or when needing separate guard from JwtAuthGuard.
+created: 2026-05-07
+updated: 2026-05-07
 ---
 
 # NestJS RBAC (Role-Based Access Control)

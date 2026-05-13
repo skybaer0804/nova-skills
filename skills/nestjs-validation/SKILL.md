@@ -1,6 +1,8 @@
 ---
 name: nestjs-validation
 description: Use when adding request body validation to NestJS endpoints — when creating DTOs with class-validator or when requests with invalid or extra fields are passing through to the service layer.
+created: 2026-05-07
+updated: 2026-05-07
 ---
 
 # NestJS Validation

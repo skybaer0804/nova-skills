@@ -1,6 +1,8 @@
 ---
 name: nestjs-module-structure
 description: Use when creating a new NestJS feature module — when deciding how to split Controller, Service, Repository, Entity, and DTO files and wire them into a @Module.
+created: 2026-05-07
+updated: 2026-05-07
 ---
 
 # NestJS Module Structure

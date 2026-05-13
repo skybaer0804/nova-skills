@@ -1,6 +1,8 @@
 ---
 name: nextjs-query-key-factory
 description: Use when query keys are scattered as inline strings or arrays, when cache invalidation scope needs precise control, when setting up QueryClient for a new project, or when tests share cache state between cases.
+created: 2026-05-04
+updated: 2026-05-04
 ---
 
 # Next.js Query Key Factory

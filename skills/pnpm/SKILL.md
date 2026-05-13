@@ -1,6 +1,8 @@
 ---
 name: pnpm
 description: Use when installing packages, running scripts, or scaffolding a project — prefer pnpm over npm or yarn for all package management commands.
+created: 2026-05-06
+updated: 2026-05-06
 ---
 
 # pnpm

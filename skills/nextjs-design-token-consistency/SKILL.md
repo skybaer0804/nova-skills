@@ -1,6 +1,8 @@
 ---
 name: nextjs-design-token-consistency
 description: Use after completing styling work when hardcoded colors, inline styles, arbitrary Tailwind values (e.g. text-[#6B7280], p-[12px]), or magic numbers appear instead of design tokens or Tailwind config values.
+created: 2026-04-19
+updated: 2026-05-03
 ---
 
 # Next.js Design Token Consistency

@@ -1,6 +1,8 @@
 ---
 name: agent-a2ui
 description: Use when an AI agent needs to generate structured UI components for a frontend — when the agent should produce interactive cards, forms, buttons, or dashboards instead of plain text, using 18 safe declarative component primitives sent as JSON over an AG-UI stream.
+created: 2026-05-05
+updated: 2026-05-05
 ---
 
 # Agent A2UI (Agent-to-User Interface Protocol)

@@ -1,6 +1,8 @@
 ---
 name: nextjs-design-system-tokens
 description: Use when building a design system from scratch, migrating Figma tokens to code, structuring primitive and semantic token layers, or setting up theme switching (dark mode, brand variants).
+created: 2026-05-04
+updated: 2026-05-09
 ---
 
 # Next.js Design System Tokens

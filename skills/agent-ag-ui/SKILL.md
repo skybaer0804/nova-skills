@@ -1,6 +1,8 @@
 ---
 name: agent-ag-ui
 description: Use when a frontend application needs to receive real-time streaming output from an AI agent — when implementing live token streaming, tool call visibility, human-in-the-loop interrupts, or connecting a Next.js/React app to an agent backend without custom WebSocket wiring.
+created: 2026-05-05
+updated: 2026-05-05
 ---
 
 # Agent AG-UI (Agent-User Interaction Protocol)

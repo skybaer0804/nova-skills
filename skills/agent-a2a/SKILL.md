@@ -1,6 +1,8 @@
 ---
 name: agent-a2a
 description: Use when an AI agent needs to delegate tasks to another agent, discover remote agents at runtime, or build a multi-agent system where agents from different frameworks or vendors need to interoperate without exposing internal implementation.
+created: 2026-05-05
+updated: 2026-05-05
 ---
 
 # Agent A2A (Agent-to-Agent Protocol)

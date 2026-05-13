@@ -1,6 +1,8 @@
 ---
 name: nextjs-zustand
 description: Use when implementing Zustand state after choosing it in nextjs-state-design — when structuring stores with slice pattern, optimizing re-renders with selectors, adding persistence, or wiring up devtools.
+created: 2026-05-04
+updated: 2026-05-04
 ---
 
 # Next.js Zustand

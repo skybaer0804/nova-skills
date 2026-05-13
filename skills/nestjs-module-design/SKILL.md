@@ -1,6 +1,8 @@
 ---
 name: nestjs-module-design
 description: Use when starting a new NestJS feature or project — when deciding which NestJS patterns and skills are needed before writing any code.
+created: 2026-05-06
+updated: 2026-05-06
 ---
 
 # NestJS Module Design (진입점)

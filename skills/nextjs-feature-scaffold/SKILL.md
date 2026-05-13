@@ -1,6 +1,8 @@
 ---
 name: nextjs-feature-scaffold
 description: Use when building a new Next.js page or feature that combines server data fetching, shared client state, and error isolation — when deciding how to split Server/Client components, where to place ErrorBoundary, which state tool to use, and how to structure custom hooks before writing any code.
+created: 2026-05-05
+updated: 2026-05-05
 ---
 
 # Next.js Feature Scaffold

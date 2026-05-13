@@ -1,0 +1,50 @@
+name: Thursday Skill Upgrade (context7)
+
+on:
+  schedule:
+    - cron: '0 18 * * 3'  # 매주 목요일 03:00 KST (수요일 18:00 UTC)
+  workflow_dispatch:
+
+concurrency:
+  group: skill-upgrade
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 전체 git 이력 필요 (updated 날짜 읽기)
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install @anthropic-ai/sdk
+
+      - name: Run skill upgrade
+        id: upgrade
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/upgrade-skill-context7.mjs
+
+      - name: Create Pull Request
+        if: steps.upgrade.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'feat: weekly skill upgrade via context7 (${{ steps.upgrade.outputs.skill_name }})'
+          title: 'feat: Thursday skill upgrade — ${{ steps.upgrade.outputs.skill_name }}'
+          body-path: /tmp/pr-body.md
+          branch: skill-upgrade/${{ github.run_number }}
+          base: main
+          delete-branch: true

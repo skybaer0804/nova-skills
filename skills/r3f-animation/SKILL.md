@@ -1,6 +1,8 @@
 ---
 name: r3f-animation
 description: Use when animating 3D objects in React Three Fiber — when using useFrame for per-frame updates, react-spring for physics-based animation, or GSAP for timeline animations.
+created: 2026-05-07
+updated: 2026-05-07
 ---
 
 # R3F Animation

@@ -1,6 +1,8 @@
 ---
 name: agent-mcp
 description: Use when an AI agent needs to connect to external tools, databases, APIs, or file systems — when implementing tool use with a standard interface, when replacing custom integration code, or when connecting to an existing MCP server ecosystem.
+created: 2026-05-05
+updated: 2026-05-05
 ---
 
 # Agent MCP (Model Context Protocol)

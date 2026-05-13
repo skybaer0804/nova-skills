@@ -1,6 +1,8 @@
 ---
 name: nextjs-tanstack-query
 description: Use when a Client Component needs to fetch, cache, or mutate server data — when useEffect+useState fetching appears, when mutation needs cache invalidation, or when loading/error states are handled manually.
+created: 2026-05-04
+updated: 2026-05-04
 ---
 
 # Next.js TanStack Query

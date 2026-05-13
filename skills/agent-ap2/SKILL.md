@@ -1,6 +1,8 @@
 ---
 name: agent-ap2
 description: Use when an AI agent needs to authorize and execute payments autonomously — when implementing spending limits, merchant restrictions, cryptographic approval proof, or audit trails for agentic purchases that require non-repudiation.
+created: 2026-05-05
+updated: 2026-05-05
 ---
 
 # Agent AP2 (Agent Payments Protocol)

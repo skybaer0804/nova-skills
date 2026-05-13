@@ -1,6 +1,8 @@
 ---
 name: nestjs-typeorm
 description: Use when defining TypeORM entities, configuring MySQL connection, or managing schema migrations in NestJS — when setting up TypeORM or adding new entities with relationships.
+created: 2026-05-07
+updated: 2026-05-07
 ---
 
 # NestJS TypeORM

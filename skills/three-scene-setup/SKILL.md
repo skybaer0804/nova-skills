@@ -1,6 +1,8 @@
 ---
 name: three-scene-setup
 description: Use when setting up a React 3D scene from scratch — when adding a Canvas, camera, lights, or basic mesh objects using React Three Fiber and drei.
+created: 2026-05-07
+updated: 2026-05-07
 ---
 
 # Three.js Scene Setup (R3F)

@@ -1,6 +1,8 @@
 ---
 name: nextjs-performance-review
 description: Use when implementing a page or feature in Next.js that involves lists, images, data fetching, or heavy UI — or when a performance issue is suspected such as slow load, janky scroll, or large bundle size.
+created: 2026-04-19
+updated: 2026-05-03
 ---
 
 # Next.js Performance Review

@@ -1,6 +1,8 @@
 ---
 name: nextjs-error-logging
 description: Use when errors in a Next.js app are not reaching a logging service, when Sentry or Datadog is not receiving server errors, or when server and client error logs lack digest correlation for matching related events.
+created: 2026-04-19
+updated: 2026-05-03
 ---
 
 # Next.js Error Logging

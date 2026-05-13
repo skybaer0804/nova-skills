@@ -1,6 +1,8 @@
 ---
 name: github-actions
 description: Use when creating or editing GitHub Actions CI/CD workflows for Node.js projects using pnpm — especially when setting up PR checks, build pipelines, or deployment workflows.
+created: 2026-05-07
+updated: 2026-05-07
 ---
 
 # GitHub Actions CI/CD (pnpm)

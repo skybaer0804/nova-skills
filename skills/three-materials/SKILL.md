@@ -1,6 +1,8 @@
 ---
 name: three-materials
 description: Use when configuring 3D materials in React Three Fiber — when setting up PBR metalness/roughness, loading textures with useTexture, or adding environment reflections with envMap.
+created: 2026-05-07
+updated: 2026-05-07
 ---
 
 # Three.js Materials (R3F)

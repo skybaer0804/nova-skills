@@ -1,6 +1,8 @@
 ---
 name: nestjs-auth-jwt
 description: Use when implementing login and JWT authentication in NestJS — when adding Passport Local strategy, RS256 token signing, or JwtAuthGuard to protect routes.
+created: 2026-05-07
+updated: 2026-05-07
 ---
 
 # NestJS Auth JWT

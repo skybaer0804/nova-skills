@@ -1,6 +1,8 @@
 ---
 name: r3f-interaction
 description: Use when adding user interaction to a React Three Fiber scene — when handling click, hover events on 3D objects, or adding camera controls with OrbitControls.
+created: 2026-05-07
+updated: 2026-05-07
 ---
 
 # R3F Interaction
