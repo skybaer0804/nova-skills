@@ -1,6 +1,6 @@
 {
   "name": "nova-skills",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Next.js frontend + NestJS backend + React Three.js/R3F + Docker Compose + AI agent protocol skills for Claude Code.",
   "keywords": [
     "skills",
