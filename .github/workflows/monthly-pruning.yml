@@ -1,0 +1,35 @@
+name: Monthly Skill Pruning Check
+
+on:
+  schedule:
+    - cron: '0 2 1 * *'  # 매월 1일 11:00 KST
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  pruning:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Run pruner
+        run: node scripts/pruner.mjs ./skills 180
+      - name: Create issue if stale skills found
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            const output = execSync('node scripts/pruner.mjs ./skills 180').toString();
+            if (!output.includes('No stale skills')) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `Monthly Pruning: Stale skills — ${new Date().toISOString().slice(0,10)}`,
+                body: output,
+                labels: ['maintenance'],
+              });
+            }
