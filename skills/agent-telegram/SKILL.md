@@ -92,14 +92,27 @@ bun install
 claude --channels plugin:telegram@claude-plugins-official --dangerously-skip-permissions
 
 # alias로 등록 (권장)
-echo "alias claude-tg='claude --channels plugin:telegram@claude-plugins-official --dangerously-skip-permissions'" >> ~/.zshrc
-source ~/.zshrc
-claude-tg
+# ~/.zshrc 에 추가:
+alias claude-tg='claude --channels plugin:telegram@claude-plugins-official --dangerously-skip-permissions'
+alias claude-dsp='claude --dangerously-skip-permissions'
 ```
 
 `--dangerously-skip-permissions` 는 원격에서 파일 수정·터미널 실행 등을 허용할 때 필수. 본인만 접근 가능한 allowlist 설정이 전제.
 
+### 채널 동의 프롬프트 스킵
+
+`~/.claude/settings.json` 에 `channelsEnabled: true` 를 추가하면 `--channels` 실행 시 나오는 실험 기능 동의 프롬프트가 자동으로 스킵된다:
+
+```json
+{
+  "channelsEnabled": true,
+  "skipDangerousModePermissionPrompt": true
+}
+```
+
 ### 재부팅 후 자동 시작 (tmux + LaunchAgent)
+
+**전제:** `channelsEnabled: true` 가 `~/.claude/settings.json` 에 설정되어 있어야 한다. 없으면 부팅 시 동의 프롬프트에서 멈춘다.
 
 **시작 스크립트** `~/bin/start-claude-tg.sh`:
 
@@ -113,16 +126,13 @@ fi
 
 /opt/homebrew/bin/tmux new-session -d -s claude-tg \
   'cd ~ && source ~/.zshrc && claude --channels plugin:telegram@claude-plugins-official --dangerously-skip-permissions'
-
-# trust 다이얼로그 자동 승인 (최초 1회)
-sleep 4 && /opt/homebrew/bin/tmux send-keys -t claude-tg "1" Enter &
 ```
 
 ```bash
 chmod +x ~/bin/start-claude-tg.sh
 ```
 
-**LaunchAgent** `~/Library/LaunchAgents/com.nowonjae.claude-tg.plist`:
+**LaunchAgent** `~/Library/LaunchAgents/com.<username>.claude-tg.plist`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -130,11 +140,11 @@ chmod +x ~/bin/start-claude-tg.sh
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.nowonjae.claude-tg</string>
+    <string>com.<username>.claude-tg</string>
     <key>ProgramArguments</key>
     <array>
         <string>/bin/zsh</string>
-        <string>/Users/nowonjae/bin/start-claude-tg.sh</string>
+        <string>/Users/<username>/bin/start-claude-tg.sh</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
@@ -147,7 +157,7 @@ chmod +x ~/bin/start-claude-tg.sh
 ```
 
 ```bash
-launchctl load ~/Library/LaunchAgents/com.nowonjae.claude-tg.plist
+launchctl load ~/Library/LaunchAgents/com.<username>.claude-tg.plist
 ```
 
 **세션 확인 및 접속:**
@@ -155,6 +165,24 @@ launchctl load ~/Library/LaunchAgents/com.nowonjae.claude-tg.plist
 ```bash
 tmux attach -t claude-tg   # 세션 화면 보기
 # 나올 때: Ctrl+B → D (세션 유지)
+```
+
+**macOS 파일 접근 권한 (TCC):** LaunchAgent를 통해 tmux가 실행될 때 macOS가 파일 접근 허용 여부를 묻는 다이얼로그를 띄울 수 있다. 이 다이얼로그는 **한 번만 허용하면 이후 재부팅 시에는 나타나지 않는다.** 자동으로 처리하려면:
+
+> **시스템 설정 → 개인 정보 보호 및 보안 → 전체 디스크 접근 권한**  
+> → `Terminal.app` + `/opt/homebrew/bin/tmux` 추가
+
+### 컨텍스트 공유 (CLAUDE.md)
+
+LaunchAgent로 시작된 claude-tg 세션은 왜 자신이 시작됐는지 알지 못한다. `~/CLAUDE.md` 를 만들어두면 홈 디렉토리에서 시작하는 모든 Claude 세션이 이를 자동으로 읽는다:
+
+```markdown
+# Claude Code - Home Session Context
+
+이 세션은 Telegram 채널 봇 (claude-tg)으로 자동 시작됩니다.
+- 실행 명령: `claude --channels plugin:telegram@claude-plugins-official --dangerously-skip-permissions`
+- LaunchAgent: `~/Library/LaunchAgents/com.<username>.claude-tg.plist`
+- 역할: Telegram 채널 메시지를 받아 처리
 ```
 
 ### 접근 제어 관리
@@ -177,6 +205,9 @@ tmux attach -t claude-tg   # 세션 화면 보기
 | `dmPolicy: "pairing"` 방치 | 등록 완료 후 반드시 `allowlist`로 전환 |
 | `--dangerously-skip-permissions` 없이 실행 | 원격 명령 실행 시 권한 프롬프트에 막힘 |
 | LaunchAgent가 `/` 디렉토리에서 Claude 시작 | 스크립트에서 `cd ~` 선행 필수 |
+| LaunchAgent 부팅 시 채널 동의 프롬프트에서 멈춤 | `~/.claude/settings.json`에 `channelsEnabled: true` 추가 |
+| tmux send-keys로 동의 프롬프트 자동 승인 시도 | `channelsEnabled: true`로 대체 — send-keys는 타이밍 문제로 불안정 |
+| macOS 파일 접근 다이얼로그가 매 부팅마다 뜸 | 시스템 설정 → 전체 디스크 접근 권한에 `Terminal.app` + `tmux` 추가 |
 
 ---
 

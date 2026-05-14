@@ -10,3 +10,8 @@ node_modules/
 
 # Unrelated project files
 components/
+
+# Telegram bridge — secrets & runtime state
+.telegram-chat-id
+.env
+telegram-bridge.config.cjs
