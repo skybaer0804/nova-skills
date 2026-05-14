@@ -113,14 +113,16 @@ describe('QaReporter', () => {
   });
 
   it('cleanScreenshots marks deleted_at and returns count', async () => {
+    // Insert a fresh BEFORE screenshot row
     await conn2.execute(
-      "UPDATE qa_screenshots SET deleted_at = NULL WHERE qa_session_id = ? AND type = 'BEFORE'",
+      `INSERT INTO qa_screenshots (qa_session_id, step_number, type, file_path)
+       VALUES (?, 99, 'BEFORE', 'nonexistent-test.png')`,
       [sessionId]
     );
     const count = await reporter.cleanScreenshots(sessionId);
     expect(count).toBeGreaterThan(0);
     const [rows] = await conn2.execute(
-      "SELECT deleted_at FROM qa_screenshots WHERE qa_session_id = ? AND type = 'BEFORE'",
+      "SELECT deleted_at FROM qa_screenshots WHERE qa_session_id = ? AND step_number = 99",
       [sessionId]
     );
     expect(rows[0].deleted_at).not.toBeNull();

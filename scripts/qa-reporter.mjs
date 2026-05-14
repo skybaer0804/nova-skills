@@ -2,6 +2,7 @@ import mysql from 'mysql2/promise';
 import { readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { parse } from 'yaml';
 import { randomUUID } from 'crypto';
+import { fileURLToPath } from 'url';
 
 export class QaReporter {
   #pool;
@@ -25,14 +26,55 @@ export class QaReporter {
       qa_session_id, url, scenario, status,
       steps = [], bugs_found = [], deferred_bugs = [], screenshots = [],
     } = qaState;
-    await this.#pool.execute(
-      `INSERT INTO qa_sessions
-        (id, url, scenario, status, total_steps, bugs_found, deferred_bugs, completed_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [qa_session_id, url, scenario, status, steps.length, bugs_found.length, deferred_bugs.length]
+    const conn = await this.#pool.getConnection();
+    try {
+      await conn.beginTransaction();
+      await conn.execute(
+        `INSERT INTO qa_sessions
+          (id, url, scenario, status, total_steps, bugs_found, deferred_bugs, completed_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+        [qa_session_id, url, scenario, status, steps.length, bugs_found.length, deferred_bugs.length]
+      );
+      for (const bug of bugs_found) await this.#saveBugConn(conn, qa_session_id, bug);
+      for (const ss of screenshots) await this.#saveScreenshotConn(conn, qa_session_id, ss);
+      await conn.commit();
+    } catch (err) {
+      await conn.rollback();
+      throw err;
+    } finally {
+      conn.release();
+    }
+  }
+
+  async #saveBugConn(conn, sessionId, bug) {
+    await conn.execute(
+      `INSERT INTO qa_bugs
+        (id, qa_session_id, bug_type, severity, step_number, description,
+         selector, screenshot_path, console_log, network_detail, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        bug.id ?? randomUUID(),
+        sessionId,
+        bug.type,
+        bug.severity,
+        bug.step,
+        bug.description,
+        bug.selector ?? null,
+        bug.screenshot_path ?? null,
+        bug.console_log ?? null,
+        bug.network_detail ?? null,
+        bug.status ?? 'OPEN',
+      ]
     );
-    for (const bug of bugs_found) await this.saveBug(qa_session_id, bug);
-    for (const ss of screenshots) await this.saveScreenshot(qa_session_id, ss);
+  }
+
+  async #saveScreenshotConn(conn, sessionId, ss) {
+    await conn.execute(
+      `INSERT INTO qa_screenshots
+        (qa_session_id, step_number, bug_id, type, file_path)
+       VALUES (?, ?, ?, ?, ?)`,
+      [sessionId, ss.step ?? null, ss.bug_id ?? null, ss.type, ss.file]
+    );
   }
 
   async saveBug(sessionId, bug) {
@@ -119,7 +161,9 @@ export class QaReporter {
       [sessionId]
     );
     for (const row of rows) {
-      try { unlinkSync(row.file_path); } catch { /* file may not exist */ }
+      try { unlinkSync(row.file_path); } catch (err) {
+        if (err.code !== 'ENOENT') throw err;
+      }
       await this.#pool.execute(
         'UPDATE qa_screenshots SET deleted_at = NOW() WHERE id = ?',
         [row.id]
@@ -130,7 +174,7 @@ export class QaReporter {
 }
 
 // ── CLI ───────────────────────────────────────────────────────────────────────
-if (process.argv[1].endsWith('qa-reporter.mjs')) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
   const cleanMode = args[0] === '--clean';
   const sessionId = cleanMode ? args[1] : args[0];
@@ -142,20 +186,22 @@ if (process.argv[1].endsWith('qa-reporter.mjs')) {
 
   const reporter = new QaReporter();
 
-  if (cleanMode) {
-    const count = await reporter.cleanScreenshots(sessionId);
-    console.log(`Cleaned ${count} screenshot(s) for session ${sessionId}`);
-  } else {
-    const raw = readFileSync('docs/qa-state.md', 'utf-8');
-    const qaState = parse(raw);
-    await reporter.saveSession(qaState);
-    const md = reporter.generateMarkdown(qaState);
-    const today = new Date().toISOString().slice(0, 10);
-    const idShort = sessionId.slice(0, 8);
-    const reportPath = `docs/qa-reports/${today}-${idShort}.md`;
-    writeFileSync(reportPath, md);
-    console.log(`Report saved: ${reportPath}`);
+  try {
+    if (cleanMode) {
+      const count = await reporter.cleanScreenshots(sessionId);
+      console.log(`Cleaned ${count} screenshot(s) for session ${sessionId}`);
+    } else {
+      const raw = readFileSync('docs/qa-state.md', 'utf-8');
+      const qaState = parse(raw);
+      await reporter.saveSession(qaState);
+      const md = reporter.generateMarkdown(qaState);
+      const today = new Date().toISOString().slice(0, 10);
+      const idShort = sessionId.slice(0, 8);
+      const reportPath = `docs/qa-reports/${today}-${idShort}.md`;
+      writeFileSync(reportPath, md);
+      console.log(`Report saved: ${reportPath}`);
+    }
+  } finally {
+    await reporter.close();
   }
-
-  await reporter.close();
 }
