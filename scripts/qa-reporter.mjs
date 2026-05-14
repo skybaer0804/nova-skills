@@ -191,7 +191,16 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       const count = await reporter.cleanScreenshots(sessionId);
       console.log(`Cleaned ${count} screenshot(s) for session ${sessionId}`);
     } else {
-      const raw = readFileSync('docs/qa-state.md', 'utf-8');
+      let raw;
+      try {
+        raw = readFileSync('docs/qa-state.md', 'utf-8');
+      } catch (err) {
+        if (err.code === 'ENOENT') {
+          console.error('docs/qa-state.md not found. Run QA Architect first to initialize the session.');
+          process.exit(1);
+        }
+        throw err;
+      }
       const qaState = parse(raw);
       await reporter.saveSession(qaState);
       const md = reporter.generateMarkdown(qaState);
