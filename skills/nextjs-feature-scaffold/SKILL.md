@@ -88,7 +88,7 @@ export function ProductListSection() {
   return (
     <ErrorBoundary
       FallbackComponent={ProductListError}
-      resetKeys={[filters]}   // filters 변경 시 에러 경계 리셋 → 새 쿼리 실행
+      resetKeys={[filters]}   // resets the error boundary when filters change → triggers new query
     >
       <ProductList />
     </ErrorBoundary>
@@ -99,7 +99,7 @@ export function ProductListSection() {
 ```tsx
 // page.tsx  ← Server Component
 export default function Page() {
-  return <main><ProductListSection /></main>  // ErrorBoundary는 여기서 직접 쓰지 않음
+  return <main><ProductListSection /></main>  // ErrorBoundary is not used directly here
 }
 ```
 

@@ -8,27 +8,27 @@ updated: 2026-05-07
 # Three.js Materials (R3F)
 
 ## Overview
-R3F에서 PBR 재질은 `MeshStandardMaterial`을 사용한다. 금속성은 `metalness` + `roughness` + `envMap` 세 가지를 함께 설정해야 반사가 보인다. 텍스처 로딩은 `useTexture` (drei)를 사용한다.
+Use `MeshStandardMaterial` for PBR materials in R3F. For metallic surfaces, all three of `metalness`, `roughness`, and `envMap` must be set together for reflections to appear. Use `useTexture` (drei) for texture loading.
 
-## PBR 재질 — metalness + roughness + envMap
+## PBR Material — metalness + roughness + envMap
 
 ```tsx
 import { Environment, useTexture } from '@react-three/drei'
 
-// 금속 구체
+// Metal sphere
 function MetalSphere() {
   return (
     <>
-      {/* envMap 없으면 metalness가 반사되지 않음 */}
+      {/* Without envMap, metalness will not reflect */}
       <Environment preset="studio" />
 
       <mesh>
         <sphereGeometry args={[1, 64, 64]} />
         <meshStandardMaterial
           color="#888888"
-          metalness={0.9}       // 1 = 완전 금속
-          roughness={0.1}       // 0 = 완전 매끄러운 (거울)
-          envMapIntensity={1.5} // 환경 반사 강도
+          metalness={0.9}       // 1 = fully metallic
+          roughness={0.1}       // 0 = perfectly smooth (mirror)
+          envMapIntensity={1.5} // Environment reflection strength
         />
       </mesh>
     </>
@@ -36,14 +36,14 @@ function MetalSphere() {
 }
 ```
 
-## 텍스처 로딩 — useTexture (drei)
+## Texture Loading — useTexture (drei)
 
 ```tsx
 import { useTexture } from '@react-three/drei'
 import { Suspense } from 'react'
 
 function WoodCube() {
-  // useTexture — Suspense 내부에서 사용
+  // useTexture — must be used inside Suspense
   const [colorMap, roughnessMap, normalMap] = useTexture([
     '/textures/wood_color.jpg',
     '/textures/wood_roughness.jpg',
@@ -64,7 +64,7 @@ function WoodCube() {
   )
 }
 
-// 반드시 Suspense로 감싸기
+// Always wrap with Suspense
 function Scene() {
   return (
     <Canvas>
@@ -76,21 +76,21 @@ function Scene() {
 }
 ```
 
-## Material 빠른 참조
+## Material Quick Reference
 
-| Material | 조명 반응 | 용도 |
-|----------|-----------|------|
-| `MeshBasicMaterial` | 없음 | 와이어프레임, UI 오버레이 |
-| `MeshStandardMaterial` | PBR | 일반 오브젝트 (권장) |
-| `MeshPhysicalMaterial` | PBR+ | 유리, 투명 재질, clearcoat |
-| `MeshToonMaterial` | Toon | 셀쉐이딩 |
+| Material | Lighting Response | Use Case |
+|----------|------------------|----------|
+| `MeshBasicMaterial` | None | Wireframes, UI overlays |
+| `MeshStandardMaterial` | PBR | General objects (recommended) |
+| `MeshPhysicalMaterial` | PBR+ | Glass, transparent materials, clearcoat |
+| `MeshToonMaterial` | Toon | Cel shading |
 
 ## Common Mistakes
 
-| 실수 | 수정 |
-|------|------|
-| `MeshBasicMaterial`로 금속 표현 | `MeshStandardMaterial` + metalness/roughness |
-| `metalness` 설정했는데 반사 없음 | `<Environment>` 또는 `envMap` 추가 필수 |
-| `new THREE.TextureLoader().load()` | `useTexture` (drei) 사용 |
-| `useTexture`를 Suspense 밖에서 사용 | 반드시 `<Suspense>` 내부 |
-| roughness/metalness 기본값 그대로 | 의도적으로 설정 — 기본값은 재질별로 다름 |
+| Mistake | Fix |
+|---------|-----|
+| Using `MeshBasicMaterial` for metallic appearance | Use `MeshStandardMaterial` + metalness/roughness |
+| Setting `metalness` but no reflections appear | `<Environment>` or `envMap` is required |
+| Using `new THREE.TextureLoader().load()` | Use `useTexture` (drei) |
+| Using `useTexture` outside of Suspense | Must be inside `<Suspense>` |
+| Leaving roughness/metalness at default values | Set them intentionally — defaults vary by material |

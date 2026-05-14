@@ -8,30 +8,30 @@ updated: 2026-05-05
 # Agent UCP (Universal Commerce Protocol)
 
 ## Overview
-UCP는 전자상거래 수명주기(탐색 → 체크아웃 → 주문)를 모듈식 표준으로 정의한다. REST, MCP, A2A 등 어떤 전송 방식을 써도 동일한 스키마로 거래가 가능하다.
+UCP defines the e-commerce lifecycle (discovery → checkout → order) as a modular standard. Transactions are possible using the same schema regardless of the transport method — REST, MCP, A2A, or others.
 
-**이 스킬을 쓰기 전에 `agent-protocol-design`으로 UCP가 필요한지 확인하라.**
-**결제가 필요하면 반드시 `agent-ap2`를 함께 사용하라.**
+**Before using this skill, verify that UCP is needed via `agent-protocol-design`.**
+**If payment is required, always use `agent-ap2` together.**
 
 ## Core Concepts
 
-| 개념 | 설명 |
-|------|------|
-| **Discovery Profile** | `/.well-known/ucp` — 공급업체가 지원하는 기능 선언 |
-| **CheckoutSession** | 주문의 단위 — 라인 아이템, 통화, 배송 정보 포함 |
-| **LineItem** | 주문 내 개별 상품 (ID, 수량) |
-| **Idempotency-Key** | 중복 주문 방지용 UUID 헤더 (필수) |
+| Concept | Description |
+|---------|-------------|
+| **Discovery Profile** | `/.well-known/ucp` — declares the capabilities supported by the vendor |
+| **CheckoutSession** | The unit of an order — includes line items, currency, and shipping information |
+| **LineItem** | An individual product within an order (ID, quantity) |
+| **Idempotency-Key** | UUID header to prevent duplicate orders (required) |
 
 ```
-에이전트
-  │  GET /.well-known/ucp           ← 공급업체 기능 확인
-  │  POST /checkout-sessions        ← 체크아웃 세션 생성
-  │  POST /checkout-sessions/{id}/complete  ← 주문 완료
+Agent
+  │  GET /.well-known/ucp           ← Check vendor capabilities
+  │  POST /checkout-sessions        ← Create checkout session
+  │  POST /checkout-sessions/{id}/complete  ← Complete order
   ▼
-공급업체 서버
+Vendor server
 ```
 
-## Python — UCP 체크아웃
+## Python — UCP Checkout
 
 ```python
 # pip install ucp-sdk httpx
@@ -44,13 +44,13 @@ from ucp_sdk.models.schemas.shopping.types.item_create_req import ItemCreateRequ
 
 async def place_order(vendor_url: str, item_id: str, quantity: int) -> dict:
     async with httpx.AsyncClient() as c:
-        # Step 1: 공급업체 UCP 기능 확인
+        # Step 1: Check vendor UCP capabilities
         profile = UcpDiscoveryProfile.model_validate(
             (await c.get(f"{vendor_url}/.well-known/ucp")).json()
         )
         print(f"Vendor capabilities: {profile.capabilities}")
 
-        # Step 2: 체크아웃 세션 생성
+        # Step 2: Create checkout session
         checkout_req = CheckoutCreateRequest(
             currency="USD",
             line_items=[
@@ -63,7 +63,7 @@ async def place_order(vendor_url: str, item_id: str, quantity: int) -> dict:
 
         headers = {
             "UCP-Agent": 'profile="https://my-agent.example/agent"',
-            "Idempotency-Key": str(uuid.uuid4()),  # 필수 — 중복 주문 방지
+            "Idempotency-Key": str(uuid.uuid4()),  # Required — prevents duplicate orders
         }
 
         checkout = (await c.post(
@@ -72,7 +72,7 @@ async def place_order(vendor_url: str, item_id: str, quantity: int) -> dict:
             headers=headers,
         )).json()
 
-        # Step 3: 주문 완료
+        # Step 3: Complete order
         result = (await c.post(
             f"{vendor_url}/checkout-sessions/{checkout['id']}/complete",
             headers={**headers, "Idempotency-Key": str(uuid.uuid4())},
@@ -81,24 +81,24 @@ async def place_order(vendor_url: str, item_id: str, quantity: int) -> dict:
         return result
 ```
 
-## TypeScript — UCP 체크아웃 (Next.js API Route)
+## TypeScript — UCP Checkout (Next.js API Route)
 
 ```typescript
 // app/api/order/route.ts
 export async function POST(req: Request) {
   const { vendorUrl, itemId, quantity } = await req.json()
 
-  // Step 1: 공급업체 프로필 확인
+  // Step 1: Check vendor profile
   const profile = await fetch(`${vendorUrl}/.well-known/ucp`).then(r => r.json())
   console.log('Vendor capabilities:', profile.capabilities)
 
-  // Step 2: 체크아웃 생성
+  // Step 2: Create checkout
   const checkout = await fetch(`${vendorUrl}/checkout-sessions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'UCP-Agent': 'profile="https://my-agent.example/agent"',
-      'Idempotency-Key': crypto.randomUUID(),  // 필수
+      'Idempotency-Key': crypto.randomUUID(),  // Required
     },
     body: JSON.stringify({
       currency: 'USD',
@@ -106,7 +106,7 @@ export async function POST(req: Request) {
     }),
   }).then(r => r.json())
 
-  // Step 3: 주문 완료
+  // Step 3: Complete order
   const order = await fetch(`${vendorUrl}/checkout-sessions/${checkout.id}/complete`, {
     method: 'POST',
     headers: { 'Idempotency-Key': crypto.randomUUID() },
@@ -118,13 +118,13 @@ export async function POST(req: Request) {
 
 ## Common Mistakes
 
-| 실수 | 수정 |
-|------|------|
-| `Idempotency-Key` 헤더 누락 | 모든 주문 요청에 UUID 필수 |
-| `/.well-known/ucp` 확인 없이 주문 | 먼저 공급업체 기능 확인 |
-| AP2 없이 결제 처리 | 결제 필요 시 `agent-ap2` 함께 사용 |
-| 같은 `Idempotency-Key` 재사용 | 요청마다 새 UUID 생성 |
+| Mistake | Fix |
+|---------|-----|
+| Missing `Idempotency-Key` header | UUID is required on every order request |
+| Placing order without checking `/.well-known/ucp` | Always verify vendor capabilities first |
+| Processing payment without AP2 | Use `agent-ap2` together when payment is required |
+| Reusing the same `Idempotency-Key` | Generate a new UUID for each request |
 
 ## Official Docs
-엣지 케이스: https://ucp.dev/
-샘플: https://github.com/Universal-Commerce-Protocol/samples
+Edge cases: https://ucp.dev/
+Samples: https://github.com/Universal-Commerce-Protocol/samples

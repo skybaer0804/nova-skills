@@ -8,9 +8,9 @@ updated: 2026-05-07
 # NestJS Validation
 
 ## Overview
-요청 데이터 검증은 DTO + class-validator 데코레이터로 선언하고, `ValidationPipe`를 `main.ts`에 전역 등록해서 모든 엔드포인트에 자동 적용한다. Service 레이어에서 조건문으로 검증하지 않는다.
+Request data validation is declared with DTO + class-validator decorators, and `ValidationPipe` is registered globally in `main.ts` so it applies automatically to all endpoints. Do not validate with conditional statements in the Service layer.
 
-## main.ts — ValidationPipe 전역 등록 (필수)
+## main.ts — Global ValidationPipe registration (required)
 
 ```typescript
 // main.ts
@@ -19,12 +19,12 @@ import { ValidationPipe } from '@nestjs/common'
 import { AppModule } from './app.module'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)   // await 필수
+  const app = await NestFactory.create(AppModule)   // await required
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,             // DTO에 없는 필드 자동 제거
-      forbidNonWhitelisted: true,  // DTO에 없는 필드 오면 400
-      transform: true,             // 요청 데이터를 DTO 타입으로 자동 변환
+      whitelist: true,             // automatically strip fields not in DTO
+      forbidNonWhitelisted: true,  // return 400 when fields not in DTO are received
+      transform: true,             // automatically convert request data to DTO types
     }),
   )
   await app.listen(3000)
@@ -45,7 +45,7 @@ export class CreateTextureDto {
   name: string
 
   @IsString()
-  @IsOptional()           // 선택 필드 — 없으면 required 취급
+  @IsOptional()           // optional field — treated as required if omitted
   description?: string
 
   @IsArray()
@@ -55,7 +55,7 @@ export class CreateTextureDto {
 }
 ```
 
-## UpdateDto — PartialType으로 중복 금지
+## UpdateDto — avoid duplication with PartialType
 
 ```typescript
 // textures/dto/update-texture.dto.ts
@@ -63,15 +63,15 @@ import { PartialType } from '@nestjs/mapped-types'
 import { CreateTextureDto } from './create-texture.dto'
 
 export class UpdateTextureDto extends PartialType(CreateTextureDto) {}
-// CreateTextureDto의 모든 필드가 자동으로 @IsOptional() 처리됨
+// All fields from CreateTextureDto are automatically treated as @IsOptional()
 ```
 
-## Controller — 타입 선언만으로 검증 자동 적용
+## Controller — validation applied automatically via type declaration
 
 ```typescript
 // textures/textures.controller.ts
 @Post()
-create(@Body() dto: CreateTextureDto) {   // 타입 선언만으로 ValidationPipe 적용
+create(@Body() dto: CreateTextureDto) {   // ValidationPipe applied just by declaring the type
   return this.texturesService.create(dto)
 }
 
@@ -83,11 +83,11 @@ update(@Param('id') id: string, @Body() dto: UpdateTextureDto) {
 
 ## Common Mistakes
 
-| 실수 | 수정 |
+| Mistake | Fix |
 |------|------|
-| `main.ts`에 `useGlobalPipes` 누락 | ValidationPipe 전역 등록 필수 |
-| `whitelist: true` 없이 등록 | 선언하지 않은 필드가 DTO를 통과해 DB에 저장됨 |
-| `await NestFactory.create()` 누락 | `const app = NestFactory.create()` → 프로미스가 파이프에 전달됨 |
-| Service에서 `if (!dto.name) throw` 수동 검증 | DTO 데코레이터로 선언 후 ValidationPipe에 위임 |
-| UpdateDto를 CreateDto와 별도로 중복 작성 | `PartialType(CreateDto)` 사용 |
-| 선택 필드에 `@IsOptional()` 누락 | 없으면 required 취급되어 항상 400 |
+| Missing `useGlobalPipes` in `main.ts` | Global ValidationPipe registration is required |
+| Registering without `whitelist: true` | Undeclared fields pass through DTO and get saved to DB |
+| Missing `await NestFactory.create()` | `const app = NestFactory.create()` → a promise gets passed to the pipe |
+| Manual validation with `if (!dto.name) throw` in Service | Declare with DTO decorators and delegate to ValidationPipe |
+| Writing UpdateDto separately duplicating CreateDto | Use `PartialType(CreateDto)` |
+| Missing `@IsOptional()` on optional fields | Without it, the field is treated as required and always returns 400 |

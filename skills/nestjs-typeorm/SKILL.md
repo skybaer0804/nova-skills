@@ -8,9 +8,9 @@ updated: 2026-05-07
 # NestJS TypeORM
 
 ## Overview
-TypeORM 설정에서 `synchronize: true`는 개발 환경에서만 사용한다. 운영 환경은 Migration으로 스키마를 관리한다. PK는 UUID, 관계 로딩은 명시적 `relations` 옵션으로 제어한다.
+In TypeORM configuration, `synchronize: true` is only used in development environments. Production environments manage schema with Migrations. PKs use UUID, and relation loading is controlled with explicit `relations` options.
 
-## TypeORM 설정 (CMF Hub)
+## TypeORM Configuration (CMF Hub)
 
 ```typescript
 // app.module.ts
@@ -23,7 +23,7 @@ TypeOrmModule.forRoot({
   database: process.env.DB_NAME,
   charset: 'utf8mb4',
   entities: [__dirname + '/**/*.entity{.ts,.js}'],
-  synchronize: process.env.NODE_ENV === 'development',  // 운영에서는 false
+  synchronize: process.env.NODE_ENV === 'development',  // false in production
   migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
   migrationsRun: process.env.NODE_ENV !== 'development',
 })
@@ -39,13 +39,13 @@ import { Texture } from '../../textures/entities/texture.entity'
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn('uuid')          // UUID PK — integer 사용 금지
+  @PrimaryGeneratedColumn('uuid')          // UUID PK — do not use integer
   id: string
 
   @Column({ unique: true })
   username: string
 
-  @Column({ select: false })               // 기본 조회에서 password 제외
+  @Column({ select: false })               // exclude password from default queries
   password: string
 
   @Column({ nullable: true })
@@ -53,7 +53,7 @@ export class User {
 
   @ManyToMany(() => Role, { eager: false })
   @JoinTable({ name: 'user_roles' })
-  roles: Role[]                            // 단일 role 컬럼 대신 many-to-many
+  roles: Role[]                            // many-to-many instead of single role column
 
   @OneToMany(() => Texture, t => t.uploader)
   textures: Texture[]
@@ -66,7 +66,7 @@ export class User {
 }
 ```
 
-## Role Entity (permissions 배열 포함)
+## Role Entity (with permissions array)
 
 ```typescript
 // roles/entities/role.entity.ts
@@ -89,7 +89,7 @@ export class Role {
 }
 ```
 
-## Texture Entity (uploader 관계 포함)
+## Texture Entity (with uploader relation)
 
 ```typescript
 // textures/entities/texture.entity.ts
@@ -137,23 +137,23 @@ export class Texture {
 }
 ```
 
-## Migration 생성 및 실행
+## Generating and Running Migrations
 
 ```bash
-# Migration 생성
+# Generate migration
 pnpm typeorm migration:generate src/database/migrations/InitSchema -- -d src/data-source.ts
 
-# Migration 실행
+# Run migration
 pnpm typeorm migration:run -- -d src/data-source.ts
 ```
 
-## 관계 로딩 — eager: true 금지
+## Relation Loading — do not use eager: true
 
 ```typescript
-// ❌ 잘못된 방법 — 모든 조회에 roles 포함, N+1 위험
+// ❌ Wrong approach — roles included in every query, N+1 risk
 @ManyToMany(() => Role, { eager: true })
 
-// ✅ 올바른 방법 — 필요한 쿼리에서만 명시
+// ✅ Correct approach — specify explicitly only in queries that need it
 this.usersRepo.findOne({
   where: { id },
   relations: ['roles'],
@@ -162,11 +162,11 @@ this.usersRepo.findOne({
 
 ## Common Mistakes
 
-| 실수 | 수정 |
+| Mistake | Fix |
 |------|------|
-| `synchronize: true` 운영 환경 사용 | `NODE_ENV === 'development'`에서만 true |
-| Migration 없이 스키마 변경 | `migration:generate` → `migration:run` |
-| `eager: true` 관계 남발 | 필요한 쿼리에서만 `relations: ['roleName']` 명시 |
-| User에 단일 `role` enum 컬럼 | Role 엔티티 many-to-many — permissions 배열 포함 |
-| `@Column({ select: false })` 미사용 | password 컬럼은 반드시 `select: false` |
-| integer PK 사용 | `@PrimaryGeneratedColumn('uuid')` |
+| Using `synchronize: true` in production | Only true when `NODE_ENV === 'development'` |
+| Changing schema without Migration | Use `migration:generate` → `migration:run` |
+| Overusing `eager: true` for relations | Specify `relations: ['roleName']` only in queries that need it |
+| Single `role` enum column on User | Role entity many-to-many — includes permissions array |
+| Not using `@Column({ select: false })` | password column must always have `select: false` |
+| Using integer PK | Use `@PrimaryGeneratedColumn('uuid')` |

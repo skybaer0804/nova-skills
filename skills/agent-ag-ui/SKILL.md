@@ -8,26 +8,26 @@ updated: 2026-05-05
 # Agent AG-UI (Agent-User Interaction Protocol)
 
 ## Overview
-AG-UI는 에이전트 백엔드와 프론트엔드를 연결하는 표준 이벤트 스트림 프로토콜이다. HTTP/WebSocket 위에서 타입화된 이벤트를 정의하여 어떤 에이전트 프레임워크를 써도 동일한 프론트엔드 코드로 연결된다.
+AG-UI is a standard event stream protocol that connects agent backends to frontends. It defines typed events over HTTP/WebSocket so that any agent framework can be connected using the same frontend code.
 
-**이 스킬을 쓰기 전에 `agent-protocol-design`으로 AG-UI가 필요한지 확인하라.**
-**커스텀 SSE 이벤트 대신 반드시 AG-UI 표준 이벤트 타입을 사용하라.**
+**Before using this skill, verify that AG-UI is needed via `agent-protocol-design`.**
+**Always use AG-UI standard event types instead of custom SSE events.**
 
-## 표준 이벤트 타입
+## Standard Event Types
 
-| 이벤트 | 의미 |
-|--------|------|
-| `RUN_STARTED` | 에이전트 실행 시작 |
-| `TEXT_MESSAGE_CONTENT` | 텍스트 델타 (스트리밍 토큰) |
-| `TOOL_CALL_START` | 툴 호출 시작 |
-| `TOOL_CALL_RESULT` | 툴 호출 결과 |
-| `TOOL_CALL_END` | 툴 호출 완료 |
-| `STATE_SNAPSHOT` | 전체 상태 동기화 |
-| `STATE_DELTA` | 상태 부분 업데이트 |
-| `RUN_FINISHED` | 에이전트 실행 완료 |
-| `RUN_ERROR` | 에러 발생 |
+| Event | Meaning |
+|-------|---------|
+| `RUN_STARTED` | Agent execution started |
+| `TEXT_MESSAGE_CONTENT` | Text delta (streaming token) |
+| `TOOL_CALL_START` | Tool call started |
+| `TOOL_CALL_RESULT` | Tool call result |
+| `TOOL_CALL_END` | Tool call completed |
+| `STATE_SNAPSHOT` | Full state synchronization |
+| `STATE_DELTA` | Partial state update |
+| `RUN_FINISHED` | Agent execution completed |
+| `RUN_ERROR` | Error occurred |
 
-## Python — AG-UI 백엔드 (Google ADK + FastAPI)
+## Python — AG-UI Backend (Google ADK + FastAPI)
 
 ```python
 # pip install google-adk ag-ui-protocol
@@ -39,10 +39,10 @@ my_agent = Agent(
     model="gemini-2.0-flash",
     name="my_agent",
     instruction="Help the user.",
-    tools=[...],  # MCP tools 등
+    tools=[...],  # MCP tools, etc.
 )
 
-# ADK 에이전트를 AG-UI 표준 SSE 스트림으로 래핑
+# Wrap ADK agent as a standard AG-UI SSE stream
 ag_ui_agent = ADKAgent(
     adk_agent=my_agent,
     app_name="my_app",
@@ -52,17 +52,17 @@ ag_ui_agent = ADKAgent(
 app = FastAPI()
 add_adk_fastapi_endpoint(app, ag_ui_agent, path="/agent")
 
-# 실행: uvicorn main:app --port 8000
-# AG-UI 스트림: POST http://localhost:8000/agent
-# 이벤트 순서: RUN_STARTED → TOOL_CALL_START → TOOL_CALL_RESULT → TOOL_CALL_END → TEXT_MESSAGE_CONTENT → RUN_FINISHED
+# Run: uvicorn main:app --port 8000
+# AG-UI stream: POST http://localhost:8000/agent
+# Event order: RUN_STARTED → TOOL_CALL_START → TOOL_CALL_RESULT → TOOL_CALL_END → TEXT_MESSAGE_CONTENT → RUN_FINISHED
 ```
 
-## TypeScript — AG-UI 프론트엔드 (Next.js + CopilotKit)
+## TypeScript — AG-UI Frontend (Next.js + CopilotKit)
 
 ```typescript
 // npm install @copilotkit/react-core @copilotkit/react-ui @copilotkit/runtime
 
-// app/layout.tsx — AG-UI 스트림을 받는 CopilotKit Provider
+// app/layout.tsx — CopilotKit Provider receiving AG-UI stream
 import { CopilotKit } from '@copilotkit/react-core'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -75,7 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   )
 }
 
-// app/api/copilotkit/route.ts — Python AG-UI 서버로 프록시
+// app/api/copilotkit/route.ts — Proxy to Python AG-UI server
 import { CopilotRuntime } from '@copilotkit/runtime'
 import { NextRequest } from 'next/server'
 
@@ -97,10 +97,10 @@ export default function Page() {
 }
 ```
 
-## TypeScript — AG-UI 이벤트 직접 소비 (CopilotKit 없이)
+## TypeScript — Consuming AG-UI Events Directly (without CopilotKit)
 
 ```typescript
-// AG-UI 표준 이벤트 타입으로 직접 파싱
+// Parse directly using AG-UI standard event types
 type AGUIEvent =
   | { type: 'RUN_STARTED' }
   | { type: 'TEXT_MESSAGE_CONTENT'; delta: string }
@@ -137,14 +137,14 @@ async function* streamAGUIEvents(message: string): AsyncGenerator<AGUIEvent> {
   }
 }
 
-// 사용
-for await (const event of streamAGUIEvents('재고 확인해줘')) {
+// Usage
+for await (const event of streamAGUIEvents('Check inventory')) {
   switch (event.type) {
     case 'TEXT_MESSAGE_CONTENT':
       process.stdout.write(event.delta)
       break
     case 'TOOL_CALL_START':
-      console.log(`\n[툴 호출: ${event.toolCallName}]`)
+      console.log(`\n[Tool call: ${event.toolCallName}]`)
       break
     case 'RUN_ERROR':
       console.error(event.message)
@@ -155,15 +155,15 @@ for await (const event of streamAGUIEvents('재고 확인해줘')) {
 
 ## Common Mistakes
 
-| 실수 | 수정 |
-|------|------|
-| 커스텀 이벤트 타입 (`text_delta` 등) | AG-UI 표준 이벤트 타입 사용 (`TEXT_MESSAGE_CONTENT`) |
-| `RUN_ERROR` 이벤트 미처리 | 모든 이벤트 타입 핸들러 필수 |
-| AG-UI 없이 raw SSE 직접 구현 | `ag_ui_adk` + `add_adk_fastapi_endpoint` 사용 |
-| A2UI 없이 AG-UI만 사용 | UI 컴포넌트 생성은 A2UI, 스트리밍 전달은 AG-UI |
-| Next.js에서 Edge Runtime 미설정 | 스트리밍 API route에 `export const runtime = 'edge'` 추가 |
+| Mistake | Fix |
+|---------|-----|
+| Custom event types (e.g. `text_delta`) | Use AG-UI standard event types (`TEXT_MESSAGE_CONTENT`) |
+| Not handling `RUN_ERROR` event | Handlers for all event types are required |
+| Implementing raw SSE directly without AG-UI | Use `ag_ui_adk` + `add_adk_fastapi_endpoint` |
+| Using AG-UI without A2UI | Use A2UI for generating UI components, AG-UI for streaming delivery |
+| Not setting Edge Runtime in Next.js | Add `export const runtime = 'edge'` to streaming API routes |
 
 ## Official Docs
-엣지 케이스: https://docs.ag-ui.com/
-데모: https://dojo.ag-ui.com/
+Edge cases: https://docs.ag-ui.com/
+Demo: https://dojo.ag-ui.com/
 CopilotKit: https://www.copilotkit.ai/

@@ -8,9 +8,9 @@ updated: 2026-05-07
 # NestJS Auth JWT
 
 ## Overview
-NestJS 인증은 Passport Local(로그인) + RS256 JWT(토큰) + JwtAuthGuard(보호) 3단계로 구성한다. RS256(비대칭 키)을 사용한다 — private key로 서명, public key로 검증.
+NestJS authentication is composed of three stages: Passport Local (login) + RS256 JWT (token) + JwtAuthGuard (protection). Uses RS256 (asymmetric key) — sign with private key, verify with public key.
 
-## RS256 키 생성 (CMF Hub — keys/ 디렉토리)
+## RS256 Key Generation (CMF Hub — keys/ directory)
 
 ```bash
 mkdir -p apps/server/keys
@@ -18,17 +18,17 @@ openssl genrsa -out apps/server/keys/private.key 2048
 openssl rsa -in apps/server/keys/private.key -pubout -out apps/server/keys/public.key
 ```
 
-## 핵심 흐름
+## Core Flow
 
 ```
 POST /auth/login
-  → LocalStrategy (username/password 검증)
-  → AuthService.login() (JWT 서명 — private.key)
+  → LocalStrategy (username/password validation)
+  → AuthService.login() (JWT signing — private.key)
   → { access_token }
 
-GET /textures (보호된 라우트)
+GET /textures (protected route)
   → JwtAuthGuard
-  → JwtStrategy (토큰 검증 — public.key)
+  → JwtStrategy (token verification — public.key)
   → Controller
 ```
 
@@ -51,7 +51,7 @@ import { UsersModule } from '../users/users.module'
     UsersModule,
     PassportModule,
     JwtModule.register({
-      privateKey: fs.readFileSync('keys/private.key'),    // 파일 기반
+      privateKey: fs.readFileSync('keys/private.key'),    // file-based
       publicKey: fs.readFileSync('keys/public.key'),
       signOptions: { algorithm: 'RS256', expiresIn: '1d' },
     }),
@@ -62,7 +62,7 @@ import { UsersModule } from '../users/users.module'
 export class AuthModule {}
 ```
 
-## LocalStrategy (로그인 검증)
+## LocalStrategy (login validation)
 
 ```typescript
 // auth/strategies/local.strategy.ts
@@ -85,7 +85,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
 }
 ```
 
-## AuthService — 토큰 생성은 Service에서
+## AuthService — token generation belongs in Service
 
 ```typescript
 // auth/auth.service.ts
@@ -106,7 +106,7 @@ export class AuthService {
     if (!user) throw new UnauthorizedException()
     const valid = await bcrypt.compare(password, user.password)
     if (!valid) throw new UnauthorizedException()
-    const { password: _, ...result } = user   // password 응답에서 제외
+    const { password: _, ...result } = user   // exclude password from response
     return result
   }
 
@@ -118,7 +118,7 @@ export class AuthService {
 }
 ```
 
-## JwtStrategy (토큰 검증)
+## JwtStrategy (token verification)
 
 ```typescript
 // auth/strategies/jwt.strategy.ts
@@ -133,7 +133,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: fs.readFileSync('keys/public.key'),
-      algorithms: ['RS256'],   // RS256 강제 — HS256 다운그레이드 공격 차단
+      algorithms: ['RS256'],   // enforce RS256 — blocks HS256 downgrade attacks
     })
   }
 
@@ -143,7 +143,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 }
 ```
 
-## 라우트 보호 — 컨트롤러 단위 적용
+## Route Protection — applied at controller level
 
 ```typescript
 // textures/textures.controller.ts
@@ -151,17 +151,17 @@ import { UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 
 @Controller('textures')
-@UseGuards(AuthGuard('jwt'))   // 컨트롤러 전체 보호
+@UseGuards(AuthGuard('jwt'))   // protect entire controller
 export class TexturesController { ... }
 ```
 
 ## Common Mistakes
 
-| 실수 | 수정 |
+| Mistake | Fix |
 |------|------|
-| HS256(대칭키) + `secret` 사용 | RS256 + `privateKey`/`publicKey` 파일 기반 사용 |
-| LocalStrategy 없이 직접 Service에서 검증 | `passport-local` + `LocalStrategy` 분리 |
-| 토큰 생성을 Controller에서 처리 | `AuthService.login()`에서만 생성 |
-| `algorithms: ['RS256']` 누락 | JWT 알고리즘 명시 필수 — none/HS256 다운그레이드 차단 |
-| password를 응답 객체에 포함 | `const { password: _, ...result } = user` 구조분해 |
-| 키를 환경변수 문자열로 관리 | `fs.readFileSync('keys/private.key')` 파일 기반 권장 |
+| Using HS256 (symmetric key) + `secret` | Use RS256 + `privateKey`/`publicKey` file-based |
+| Validating directly in Service without LocalStrategy | Separate with `passport-local` + `LocalStrategy` |
+| Generating token in Controller | Generate only in `AuthService.login()` |
+| Missing `algorithms: ['RS256']` | Explicitly specify JWT algorithm — blocks none/HS256 downgrade |
+| Including password in response object | Destructure with `const { password: _, ...result } = user` |
+| Managing keys as environment variable strings | Prefer file-based `fs.readFileSync('keys/private.key')` |

@@ -8,31 +8,31 @@ updated: 2026-05-04
 # Next.js Zustand
 
 ## Overview
-`nextjs-state-design`에서 Zustand를 선택한 후 구현 단계. Slice 패턴, Selector 최적화, 미들웨어(devtools, persist, immer) 사용법을 다룬다.
+The implementation phase after selecting Zustand in `nextjs-state-design`. Covers the slice pattern, selector optimization, and middleware usage (devtools, persist, immer).
 
-## Zustand가 맞는 경우
+## When Zustand is the Right Choice
 
-| 조건 | Zustand 적합 | 대안 |
-|------|-------------|------|
-| 서로 관련 없는 컴포넌트 간 공유 상태 | ✅ | - |
-| 서버에서 온 데이터 | ❌ | TanStack Query |
-| URL에 반영되어야 하는 상태 (필터, 탭) | ❌ | useSearchParams |
-| 단일 컴포넌트의 로컬 상태 | ❌ | useState |
+| Condition | Zustand fits | Alternative |
+|-----------|-------------|-------------|
+| Shared state between unrelated components | ✅ | - |
+| Data from the server | ❌ | TanStack Query |
+| State that should be reflected in the URL (filters, tabs) | ❌ | useSearchParams |
+| Local state within a single component | ❌ | useState |
 
 ## Enforcement Rules
 
-| 패턴 | 근거 | 예외 허용 케이스 |
-|------|------|----------------|
-| Slice 패턴으로 도메인별 분리 | 거대한 단일 store는 관심사 혼재, 테스트 어려움 | 상태 필드가 5개 미만이면 단일 store 허용 |
-| Selector로 필요한 상태만 구독 | 전체 store 구독 시 무관한 변경에도 리렌더링 | 컴포넌트가 실제로 store 전체를 사용하는 경우 전체 구독 허용 |
-| `immer` 미들웨어로 중첩 상태 처리 | 깊은 중첩의 spread 체인은 오류 발생 쉬움 | 평탄한 단순 상태는 immer 없이 직접 spread 허용 |
-| `devtools` 미들웨어는 dev 환경에서만 | prod bundle에 devtools 포함 방지 | - |
-| 서버 데이터를 Zustand에 저장 금지 | TanStack Query 캐시와 이중 관리 → 동기화 버그 | - |
-| `persist` 사용 시 `version` + `migrate` 필수 | 스키마 변경 시 기존 localStorage 파싱 오류 방지 | 개발 단계에서 localStorage 초기화 허용 시 생략 가능 |
+| Pattern | Rationale | Allowed Exception |
+|---------|-----------|-------------------|
+| Separate domains using the slice pattern | A single monolithic store mixes concerns and is hard to test | A single store is allowed when there are fewer than 5 state fields |
+| Subscribe only to needed state via selectors | Subscribing to the entire store causes re-renders on unrelated changes | Full subscription allowed when the component genuinely uses the entire store |
+| Use `immer` middleware for nested state | Deep-nested spread chains are error-prone | Direct spread is fine for flat, simple state without immer |
+| `devtools` middleware only in dev environment | Prevents devtools from being included in the prod bundle | - |
+| Do not store server data in Zustand | Dual management with TanStack Query cache leads to sync bugs | - |
+| `persist` requires `version` + `migrate` | Prevents localStorage parse errors when the schema changes | Can be omitted during development when clearing localStorage is acceptable |
 
-## 1. Slice 패턴
+## 1. Slice Pattern
 
-도메인별 slice를 만들고 하나의 store에 합성한다.
+Create per-domain slices and compose them into a single store.
 
 ```ts
 // store/slices/cart-slice.ts
@@ -88,7 +88,7 @@ export const createUISlice: StateCreator<UISlice> = (set) => ({
 ```
 
 ```ts
-// store/index.ts — slice 합성
+// store/index.ts — slice composition
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import { createCartSlice, type CartSlice } from './slices/cart-slice'
@@ -102,46 +102,46 @@ export const useStore = create<StoreState>()(
       ...createCartSlice(...args),
       ...createUISlice(...args),
     }),
-    { enabled: process.env.NODE_ENV === 'development' }  // dev만 활성화
+    { enabled: process.env.NODE_ENV === 'development' }  // dev only
   )
 )
 
-// 명명된 selector 내보내기 — 컴포넌트에서 useStore 직접 사용 대신
+// Export named selectors — use these instead of useStore directly in components
 export const useCartItems = () => useStore((s) => s.items)
 export const useCartCount = () => useStore((s) => s.items.length)
 export const useSidebarOpen = () => useStore((s) => s.sidebarOpen)
 export const useToggleSidebar = () => useStore((s) => s.toggleSidebar)
 ```
 
-## 2. Selector 최적화
+## 2. Selector Optimization
 
 ```tsx
-// ❌ 전체 store 구독 — 무관한 상태 변경에도 리렌더링
+// ❌ Subscribing to the entire store — re-renders on unrelated state changes
 const { items, sidebarOpen, toggleSidebar } = useStore()
 
-// ✅ 필요한 상태만 구독
+// ✅ Subscribe only to what you need
 const items = useStore((s) => s.items)
 const toggleSidebar = useStore((s) => s.toggleSidebar)
 
-// ✅ 더 좋음 — store/index.ts의 명명된 selector 사용
+// ✅ Even better — use the named selectors from store/index.ts
 const items = useCartItems()
 ```
 
-여러 값을 한 번에 구독할 때 `useShallow`로 불필요한 리렌더링 방지:
+Use `useShallow` when subscribing to multiple values at once to prevent unnecessary re-renders:
 
 ```ts
 import { useShallow } from 'zustand/react/shallow'
 
-// useShallow 없이: 내용이 같아도 새 객체 참조로 리렌더링
-// useShallow 사용: 실제 값이 바뀔 때만 리렌더링
+// Without useShallow: re-renders on every call due to new object reference, even with same values
+// With useShallow: re-renders only when actual values change
 const { items, addItem } = useStore(
   useShallow((s) => ({ items: s.items, addItem: s.addItem }))
 )
 ```
 
-## 3. immer 미들웨어
+## 3. immer Middleware
 
-중첩된 상태 구조에서 불변성을 안전하게 처리한다.
+Safely handles immutability in nested state structures.
 
 ```ts
 // store/user-store.ts
@@ -165,7 +165,7 @@ export const useUserStore = create<UserStore>()(
         profile: { name: '', avatar: '' },
         settings: { theme: 'light', notifications: true },
       },
-      // ✅ 직접 변경 — immer가 불변성 처리
+      // ✅ Direct mutation — immer handles immutability
       updateName: (name) =>
         set((state) => { state.user.profile.name = name }),
       toggleTheme: () =>
@@ -179,9 +179,9 @@ export const useUserStore = create<UserStore>()(
 )
 ```
 
-**예외:** `{ count: 0, increment: () => set(s => ({ count: s.count + 1 })) }` 같은 평탄한 상태는 immer 없이 직접 spread가 더 명확하다.
+**Exception:** For flat state like `{ count: 0, increment: () => set(s => ({ count: s.count + 1 })) }`, direct spread without immer is clearer.
 
-## 4. persist 미들웨어
+## 4. persist Middleware
 
 ```ts
 // store/preferences-store.ts
@@ -198,20 +198,20 @@ export const usePreferencesStore = create<PreferencesStore>()(
   persist(
     (set) => ({
       theme: 'light',
-      language: 'ko',
+      language: 'en',
       setTheme: (theme) => set({ theme }),
     }),
     {
       name: 'user-preferences',
       storage: createJSONStorage(() => localStorage),
-      version: 1,  // 스키마 변경 시 올리기
+      version: 1,  // Increment when schema changes
       migrate: (persistedState: unknown, version: number) => {
         if (version === 0) {
-          // v0에서 v1: 'color' 필드가 'theme'으로 변경됨
+          // v0 to v1: 'color' field renamed to 'theme'
           const old = persistedState as { color?: string }
           return {
             theme: (old.color ?? 'light') as 'light' | 'dark',
-            language: 'ko',
+            language: 'en',
           }
         }
         return persistedState as PreferencesStore
@@ -221,12 +221,12 @@ export const usePreferencesStore = create<PreferencesStore>()(
 )
 ```
 
-**스키마 변경 체크리스트:**
-- [ ] `version` 번호 올리기
-- [ ] 이전 버전 migration case 추가
-- [ ] 구 localStorage 데이터로 migration 테스트
+**Schema change checklist:**
+- [ ] Bump the `version` number
+- [ ] Add a migration case for the previous version
+- [ ] Test migration with old localStorage data
 
-## 5. Store 테스트
+## 5. Store Testing
 
 ```ts
 // store/slices/cart-slice.test.ts
@@ -238,32 +238,32 @@ function createTestStore() {
 }
 
 describe('CartSlice', () => {
-  it('빈 장바구니에 상품을 추가한다', () => {
+  it('adds an item to an empty cart', () => {
     const store = createTestStore()
-    store.getState().addItem({ id: '1', name: '상품', price: 10, quantity: 1 })
+    store.getState().addItem({ id: '1', name: 'Item', price: 10, quantity: 1 })
     expect(store.getState().items).toHaveLength(1)
-    expect(store.getState().items[0].name).toBe('상품')
+    expect(store.getState().items[0].name).toBe('Item')
   })
 
-  it('같은 상품을 두 번 추가하면 수량이 증가한다', () => {
+  it('increases quantity when the same item is added twice', () => {
     const store = createTestStore()
-    const item = { id: '1', name: '상품', price: 10, quantity: 1 }
+    const item = { id: '1', name: 'Item', price: 10, quantity: 1 }
     store.getState().addItem(item)
     store.getState().addItem(item)
     expect(store.getState().items).toHaveLength(1)
     expect(store.getState().items[0].quantity).toBe(2)
   })
 
-  it('id로 상품을 삭제한다', () => {
+  it('removes an item by id', () => {
     const store = createTestStore()
-    store.getState().addItem({ id: '1', name: '상품', price: 10, quantity: 1 })
+    store.getState().addItem({ id: '1', name: 'Item', price: 10, quantity: 1 })
     store.getState().removeItem('1')
     expect(store.getState().items).toHaveLength(0)
   })
 
-  it('clearCart로 전체 초기화한다', () => {
+  it('clears the entire cart with clearCart', () => {
     const store = createTestStore()
-    store.getState().addItem({ id: '1', name: '상품', price: 10, quantity: 1 })
+    store.getState().addItem({ id: '1', name: 'Item', price: 10, quantity: 1 })
     store.getState().clearCart()
     expect(store.getState().items).toHaveLength(0)
   })
@@ -272,11 +272,11 @@ describe('CartSlice', () => {
 
 ## Common Mistakes
 
-| 실수 | 수정 |
-|------|------|
-| API 응답 데이터를 Zustand에 저장 | TanStack Query 사용 — Zustand는 클라이언트 전용 상태 |
-| `useStore()` selector 없이 사용 | 항상 selector 전달: `useStore(s => s.items)` |
-| 모든 상태를 하나의 거대한 store에 | 도메인별 slice로 분리 |
-| prod에서 devtools 활성화 | `enabled: process.env.NODE_ENV === 'development'` 추가 |
-| `persist` 배포 후 `version` 없이 스키마 변경 | 항상 version + migrate 함께 정의 |
-| 평탄한 상태에 immer 적용 | 불필요한 복잡성 — 직접 spread 사용 |
+| Mistake | Fix |
+|---------|-----|
+| Storing API response data in Zustand | Use TanStack Query — Zustand is for client-only state |
+| Using `useStore()` without a selector | Always pass a selector: `useStore(s => s.items)` |
+| Putting all state in one giant store | Separate into per-domain slices |
+| Enabling devtools in production | Add `enabled: process.env.NODE_ENV === 'development'` |
+| Changing schema after `persist` deploy without `version` | Always define version + migrate together |
+| Applying immer to flat state | Unnecessary complexity — use direct spread instead |

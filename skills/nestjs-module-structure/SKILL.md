@@ -8,9 +8,9 @@ updated: 2026-05-07
 # NestJS Module Structure
 
 ## Overview
-NestJS 기능은 Controller / Service / Entity / DTO 4개 레이어로 분리된 자급자족 모듈로 만든다. 각 파일은 하나의 책임만 가지며, Module이 이들을 @Module 데코레이터로 묶는다.
+NestJS features are built as self-contained modules separated into 4 layers: Controller / Service / Entity / DTO. Each file has a single responsibility, and the Module binds them together with the @Module decorator.
 
-## 파일 구조 (CMF Hub — materials 예시)
+## File Structure (CMF Hub — materials example)
 
 ```
 materials/
@@ -24,7 +24,7 @@ materials/
 └── materials.module.ts
 ```
 
-## Entity — UUID PK 필수
+## Entity — UUID PK required
 
 ```typescript
 // materials/entities/material.entity.ts
@@ -32,7 +32,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 
 @Entity('materials')
 export class Material {
-  @PrimaryGeneratedColumn('uuid')   // integer PK 사용 금지
+  @PrimaryGeneratedColumn('uuid')   // do not use integer PK
   id: string
 
   @Column({ unique: true })
@@ -52,7 +52,7 @@ export class Material {
 }
 ```
 
-## Service — Repository 주입 패턴
+## Service — Repository injection pattern
 
 ```typescript
 // materials/materials.service.ts
@@ -96,7 +96,7 @@ export class MaterialsService {
 }
 ```
 
-## Module — TypeOrmModule.forFeature 필수
+## Module — TypeOrmModule.forFeature required
 
 ```typescript
 // materials/materials.module.ts
@@ -107,21 +107,21 @@ import { MaterialsService } from './materials.service'
 import { MaterialsController } from './materials.controller'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Material])],  // 반드시 등록
+  imports: [TypeOrmModule.forFeature([Material])],  // must be registered
   providers: [MaterialsService],
   controllers: [MaterialsController],
-  exports: [MaterialsService],  // 다른 모듈에서 주입할 경우
+  exports: [MaterialsService],  // when injecting into other modules
 })
 export class MaterialsModule {}
 ```
 
-## app.module.ts 등록
+## app.module.ts registration
 
 ```typescript
 @Module({
   imports: [
     TypeOrmModule.forRoot({ ... }),
-    MaterialsModule,  // 추가
+    MaterialsModule,  // add here
   ],
 })
 export class AppModule {}
@@ -129,11 +129,11 @@ export class AppModule {}
 
 ## Common Mistakes
 
-| 실수 | 수정 |
+| Mistake | Fix |
 |------|------|
-| `@PrimaryGeneratedColumn()` integer PK 사용 | `@PrimaryGeneratedColumn('uuid')` 사용 |
-| Service에서 `getRepository()` 직접 호출 | `@InjectRepository(Entity)` 주입 패턴 사용 |
-| `TypeOrmModule.forFeature([Entity])` 누락 | Module `imports`에 반드시 등록 |
-| DTO 없이 `body: any` 사용 | `CreateDto` / `UpdateDto` 분리 (→ `nestjs-validation`) |
-| `exports` 없이 다른 모듈에서 Service 사용 | `exports: [MaterialsService]` 추가 |
-| Swagger 데코레이터 자동 추가 | Swagger는 선택사항, 기본 모듈 구조에 포함 안 함 |
+| Using `@PrimaryGeneratedColumn()` integer PK | Use `@PrimaryGeneratedColumn('uuid')` |
+| Calling `getRepository()` directly in Service | Use `@InjectRepository(Entity)` injection pattern |
+| Missing `TypeOrmModule.forFeature([Entity])` | Must be registered in Module `imports` |
+| Using `body: any` without DTO | Separate `CreateDto` / `UpdateDto` (→ `nestjs-validation`) |
+| Using Service from another module without `exports` | Add `exports: [MaterialsService]` |
+| Automatically adding Swagger decorators | Swagger is optional, not included in base module structure |

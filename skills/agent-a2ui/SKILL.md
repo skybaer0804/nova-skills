@@ -8,33 +8,33 @@ updated: 2026-05-05
 # Agent A2UI (Agent-to-User Interface Protocol)
 
 ## Overview
-A2UI는 에이전트가 18개의 안전한 컴포넌트 프리미티브(Card, Text, Button 등)로 UI를 선언적 JSON으로 정의하는 프로토콜이다. 구조(컴포넌트 트리)와 데이터를 분리하여 데이터만 교체해도 컴포넌트 재전송 없이 UI가 업데이트된다.
+A2UI is a protocol where agents define UI declaratively as JSON using 18 safe component primitives (Card, Text, Button, etc.). By separating structure (component tree) from data, the UI can update by replacing only the data without resending the component tree.
 
-**이 스킬을 쓰기 전에 `agent-protocol-design`으로 A2UI가 필요한지 확인하라.**
-**A2UI 메시지는 AG-UI 스트림을 통해 프론트엔드에 전달된다 (`agent-ag-ui` 함께 사용).**
+**Before using this skill, verify that A2UI is needed via `agent-protocol-design`.**
+**A2UI messages are delivered to the frontend via an AG-UI stream (use together with `agent-ag-ui`).**
 
 ## Core Concepts
 
-| 개념 | 설명 |
-|------|------|
-| **Surface** | UI가 렌더링될 독립 영역 (`surfaceId`로 식별) |
-| **Component** | 18개 프리미티브 중 하나 (Card, Column, Row, Text, Button 등) |
-| **DataModel** | 컴포넌트가 참조하는 데이터 (`{"path": "price"}` 형태) |
-| **Flat List** | 컴포넌트 트리는 중첩 없이 ID 참조로 구성 |
+| Concept | Description |
+|---------|-------------|
+| **Surface** | An independent area where UI is rendered (identified by `surfaceId`) |
+| **Component** | One of the 18 primitives (Card, Column, Row, Text, Button, etc.) |
+| **DataModel** | Data referenced by components (in the form `{"path": "price"}`) |
+| **Flat List** | The component tree is composed via ID references with no nesting |
 
-## 18가지 컴포넌트 프리미티브
+## 18 Component Primitives
 
 `Card, Column, Row, Text, Button, TextField, CheckBox, RadioButton, Select, Image, Divider, Spacer, Badge, ProgressBar, Chip, Link, Icon, List`
 
-## Python — A2UI 메시지 시퀀스
+## Python — A2UI Message Sequence
 
 ```python
-# 에이전트가 반환하는 A2UI 메시지 3단계
+# 3-step A2UI messages returned by the agent
 a2ui_messages = [
-    # Step 1: 렌더링 표면 생성
+    # Step 1: Create rendering surface
     {"beginRendering": {"surfaceId": "product-card", "root": "card"}},
 
-    # Step 2: 컴포넌트 트리 전송 (플랫 리스트 — 중첩 없이 ID 참조)
+    # Step 2: Send component tree (flat list — no nesting, ID references)
     {"surfaceUpdate": {
         "surfaceId": "product-card",
         "components": [
@@ -46,11 +46,11 @@ a2ui_messages = [
                 "child": "btn-label",
                 "action": {"name": "add_to_cart", "context": [{"key": "id", "value": {"path": "item_id"}}]}
             }}},
-            {"id": "btn-label", "component": {"Text": {"text": {"literal": "장바구니 담기"}}}},
+            {"id": "btn-label", "component": {"Text": {"text": {"literal": "Add to Cart"}}}},
         ]
     }},
 
-    # Step 3: 데이터 전송 (컴포넌트 트리 유지, 데이터만 교체 가능)
+    # Step 3: Send data (component tree is preserved, only data is replaced)
     {"dataModelUpdate": {
         "surfaceId": "product-card",
         "contents": [
@@ -61,7 +61,7 @@ a2ui_messages = [
     }},
 ]
 
-# 데이터만 업데이트 (컴포넌트 트리 재전송 없음 — 성능 최적화)
+# Update data only (no resending component tree — performance optimization)
 data_update = {
     "dataModelUpdate": {
         "surfaceId": "product-card",
@@ -73,11 +73,11 @@ data_update = {
 }
 ```
 
-## TypeScript — A2UI 렌더러 (Next.js)
+## TypeScript — A2UI Renderer (Next.js)
 
 ```typescript
-// A2UI 메시지를 수신해서 React 컴포넌트로 렌더링
-// AG-UI 스트림의 커스텀 이벤트로 전달됨
+// Receive A2UI messages and render as React components
+// Delivered as custom events on the AG-UI stream
 
 interface A2UISurface {
   components: Record<string, { component: Record<string, unknown> }>
@@ -123,21 +123,21 @@ function renderComponent(id: string, surface: A2UISurface): React.ReactNode {
 
 function handleAction(name: string, ctx: Record<string, string>) {
   console.log('A2UI action:', name, ctx)
-  // 에이전트 액션 처리
+  // Handle agent action
 }
 ```
 
 ## Common Mistakes
 
-| 실수 | 수정 |
-|------|------|
-| 컴포넌트 트리를 중첩 JSON으로 작성 | ID 참조 플랫 리스트로 작성 |
-| 데이터 변경 시 컴포넌트 트리 재전송 | `dataModelUpdate`만 전송 |
-| HTML 직접 생성 | 18개 프리미티브만 사용 (XSS 방지) |
-| AG-UI 없이 A2UI 단독 사용 | A2UI 메시지는 AG-UI 스트림으로 전달됨 |
-| `beginRendering` 없이 `surfaceUpdate` | 반드시 surface 먼저 생성 |
+| Mistake | Fix |
+|---------|-----|
+| Writing component tree as nested JSON | Write as a flat list using ID references |
+| Resending component tree when data changes | Send only `dataModelUpdate` |
+| Generating HTML directly | Use only the 18 primitives (prevents XSS) |
+| Using A2UI without AG-UI | A2UI messages are delivered via AG-UI stream |
+| Using `surfaceUpdate` without `beginRendering` | Surface must be created first |
 
 ## Official Docs
-엣지 케이스: https://a2ui.org/
-샘플: https://github.com/google/A2UI/tree/main/samples
-위젯 빌더: https://a2ui-composer.ag-ui.com/
+Edge cases: https://a2ui.org/
+Samples: https://github.com/google/A2UI/tree/main/samples
+Widget builder: https://a2ui-composer.ag-ui.com/

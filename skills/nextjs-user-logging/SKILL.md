@@ -72,7 +72,7 @@ Usage:
 ```tsx
 const { track } = useUserEvent()
 <button onClick={() => track('play_button_clicked', { episodeSlug: ep.slug })}>
-  재생
+  Play
 </button>
 ```
 

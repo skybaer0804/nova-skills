@@ -10,31 +10,31 @@ updated: 2026-05-04
 ## Overview
 Replace manual `useEffect + useState` data fetching with TanStack Query v5. Handles caching, background refetching, loading/error states, and mutations with cache synchronization.
 
-> **v4 → v5 변경사항:** `isLoading` → `isPending`, `suspense: true` 옵션 제거 → `useSuspenseQuery`, `cacheTime` → `gcTime`
+> **v4 → v5 changes:** `isLoading` → `isPending`, `suspense: true` option removed → use `useSuspenseQuery`, `cacheTime` → `gcTime`
 
 ## When to Use TanStack Query
 
 ```
-서버(API/DB) 데이터인가?
-  YES → Client Component인가?
-          YES → TanStack Query 사용
-          NO  → Server Component에서 직접 fetch (TanStack Query 불필요)
-  NO  → Zustand / useState / URL state 사용 (nextjs-state-design 참조)
+Is this server (API/DB) data?
+  YES → Is it in a Client Component?
+          YES → Use TanStack Query
+          NO  → Fetch directly in a Server Component (TanStack Query not needed)
+  NO  → Use Zustand / useState / URL state (see nextjs-state-design)
 ```
 
-**주의:** Next.js Server Component는 TanStack Query 없이 직접 데이터를 fetch한다. TanStack Query는 Client Component 전용이다.
+**Note:** Next.js Server Components fetch data directly without TanStack Query. TanStack Query is for Client Components only.
 
 ## Enforcement Rules
 
-| 패턴 | 근거 | 예외 허용 케이스 |
-|------|------|----------------|
-| `staleTime` 항상 명시 | 기본값 0은 매 포커스마다 리페칭 → 불필요한 네트워크 요청 | 실시간 데이터(주식, 채팅)는 `staleTime: 0` 허용 |
-| `queryKey`는 항상 배열 | 문자열 key는 범위 지정 무효화 불가 | - |
-| mutation 후 `invalidateQueries` 또는 `setQueryData` | 없으면 UI가 stale 데이터를 계속 표시 | fire-and-forget mutation(분석, 로깅)은 생략 가능 |
-| `isPending` + `isError` 상태 처리 필수 | 미처리 시 빈 화면 또는 조용한 실패 | Storybook/테스트에서 mock 데이터만 사용 시 생략 가능 |
-| Optimistic update: `onMutate` + `onError` rollback 쌍 | rollback 없는 optimistic update는 데이터 불일치 유발 | 좋아요/조회수처럼 잠깐의 불일치가 허용되는 경우 rollback 생략 가능 |
+| Pattern | Rationale | Allowed Exceptions |
+|---------|-----------|-------------------|
+| Always specify `staleTime` | Default of 0 triggers refetch on every focus → unnecessary network requests | Real-time data (stocks, chat) may use `staleTime: 0` |
+| `queryKey` must always be an array | String keys cannot be scoped for targeted invalidation | - |
+| `invalidateQueries` or `setQueryData` after mutation | Without it, the UI keeps showing stale data | Fire-and-forget mutations (analytics, logging) may omit it |
+| `isPending` + `isError` states must be handled | Unhandled states cause blank screens or silent failures | May be omitted when only mock data is used in Storybook/tests |
+| Optimistic update: `onMutate` + `onError` rollback pair | Optimistic updates without rollback cause data inconsistencies | Rollback may be omitted when brief inconsistency is acceptable (e.g., likes, view counts) |
 
-## 1. useQuery — 기본 데이터 페칭
+## 1. useQuery — Basic Data Fetching
 
 ```tsx
 'use client'
@@ -42,9 +42,9 @@ import { useQuery } from '@tanstack/react-query'
 
 function ProductDetail({ id }: { id: string }) {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['products', 'detail', id],  // 항상 배열
+    queryKey: ['products', 'detail', id],  // always an array
     queryFn: () => fetchProduct(id),
-    staleTime: 60 * 1000,                  // 항상 명시
+    staleTime: 60 * 1000,                  // always specified
   })
 
   if (isPending) return <Skeleton />       // v4: isLoading
@@ -54,7 +54,7 @@ function ProductDetail({ id }: { id: string }) {
 }
 ```
 
-## 2. useMutation + 캐시 무효화
+## 2. useMutation + Cache Invalidation
 
 ```tsx
 'use client'
@@ -66,9 +66,9 @@ function UpdateProductForm({ id }: { id: string }) {
   const mutation = useMutation({
     mutationFn: (data: UpdateProductInput) => updateProduct(id, data),
     onSuccess: () => {
-      // Option A: 서버에서 최신 데이터 리페칭
+      // Option A: refetch latest data from server
       queryClient.invalidateQueries({ queryKey: ['products', 'detail', id] })
-      // Option B: 캐시를 직접 업데이트 (리페칭 없음)
+      // Option B: update cache directly (no refetch)
       // queryClient.setQueryData(['products', 'detail', id], updatedData)
     },
   })
@@ -78,7 +78,7 @@ function UpdateProductForm({ id }: { id: string }) {
       onClick={() => mutation.mutate({ name: 'New Name' })}
       disabled={mutation.isPending}
     >
-      {mutation.isPending ? '저장 중...' : '저장'}
+      {mutation.isPending ? 'Saving...' : 'Save'}
     </button>
   )
 }
@@ -90,11 +90,11 @@ function UpdateProductForm({ id }: { id: string }) {
 const mutation = useMutation({
   mutationFn: (liked: boolean) => toggleLike(postId, liked),
   onMutate: async (liked) => {
-    // 1. 진행 중인 쿼리를 취소해 optimistic update가 덮어써지지 않게 함
+    // 1. Cancel in-flight queries so they don't overwrite the optimistic update
     await queryClient.cancelQueries({ queryKey: ['posts', 'detail', postId] })
-    // 2. rollback을 위해 이전 값 스냅샷
+    // 2. Snapshot the previous value for rollback
     const previous = queryClient.getQueryData(['posts', 'detail', postId])
-    // 3. 즉시 캐시 업데이트
+    // 3. Immediately update the cache
     queryClient.setQueryData(['posts', 'detail', postId], (old: Post) => ({
       ...old,
       liked,
@@ -103,7 +103,7 @@ const mutation = useMutation({
     return { previous }
   },
   onError: (_err, _liked, context) => {
-    // 실패 시 이전 값으로 롤백
+    // Roll back to the previous value on failure
     queryClient.setQueryData(['posts', 'detail', postId], context?.previous)
   },
   onSettled: () => {
@@ -112,16 +112,16 @@ const mutation = useMutation({
 })
 ```
 
-**예외:** 좋아요/조회수처럼 잠깐의 불일치가 허용되는 경우 `onMutate`/`onError` 없이 `onSuccess` invalidation만 사용 가능.
+**Exception:** When brief inconsistency is acceptable (e.g., likes, view counts), `onSuccess` invalidation alone may be used without `onMutate`/`onError`.
 
-## 4. Suspense 연동 (v5)
+## 4. Suspense Integration (v5)
 
 ```tsx
-// v5: suspense: true 옵션 대신 useSuspenseQuery 훅 사용
+// v5: use useSuspenseQuery hook instead of the suspense: true option
 import { useSuspenseQuery } from '@tanstack/react-query'
 
 function ProductList() {
-  const { data } = useSuspenseQuery({   // 로딩 중 Promise를 throw
+  const { data } = useSuspenseQuery({   // throws a Promise while loading
     queryKey: ['products', 'list'],
     queryFn: fetchProducts,
     staleTime: 5 * 60 * 1000,
@@ -129,7 +129,7 @@ function ProductList() {
   return <ul>{data.map(p => <li key={p.id}>{p.name}</li>)}</ul>
 }
 
-// 상위에서 Suspense로 감싸기
+// Wrap with Suspense in the parent
 <Suspense fallback={<ProductListSkeleton />}>
   <ProductList />
 </Suspense>
@@ -151,7 +151,7 @@ export default async function ProductsPage() {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <ProductList />  {/* Client Component — 캐시가 미리 채워진 상태로 시작 */}
+      <ProductList />  {/* Client Component — starts with the cache already populated */}
     </HydrationBoundary>
   )
 }
@@ -159,11 +159,11 @@ export default async function ProductsPage() {
 
 ## Common Mistakes
 
-| 실수 | 수정 |
-|------|------|
-| `useEffect + useState`로 데이터 페칭 | `useQuery`로 교체 |
-| v5에서 `isLoading` 사용 | `isPending` 사용 — `isLoading`은 `isPending && !isPlaceholderData` |
-| 컴포넌트 내부에서 `new QueryClient()` 생성 | `app/providers.tsx` 싱글톤 사용 |
-| v5에서 `suspense: true` 옵션 | `useSuspenseQuery` 훅으로 교체 |
-| `staleTime` 미설정 | 항상 설정 — 기본값 0은 과도한 리페칭 유발 |
-| mutation 후 invalidation 없음 | `onSuccess`에서 `invalidateQueries` 호출 |
+| Mistake | Fix |
+|---------|-----|
+| Data fetching with `useEffect + useState` | Replace with `useQuery` |
+| Using `isLoading` in v5 | Use `isPending` — `isLoading` is `isPending && !isPlaceholderData` |
+| Creating `new QueryClient()` inside a component | Use the singleton in `app/providers.tsx` |
+| Using `suspense: true` option in v5 | Replace with the `useSuspenseQuery` hook |
+| `staleTime` not set | Always set it — the default of 0 causes excessive refetching |
+| No invalidation after mutation | Call `invalidateQueries` in `onSuccess` |

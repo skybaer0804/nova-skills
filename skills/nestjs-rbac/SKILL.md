@@ -8,9 +8,9 @@ updated: 2026-05-07
 # NestJS RBAC (Role-Based Access Control)
 
 ## Overview
-인증(누구인가)과 권한(무엇을 할 수 있는가)은 분리한다. `JwtAuthGuard`(인증) 다음에 `PermissionsGuard`(권한)를 별도로 적용한다. 역할 이름 (`Role.ADMIN`) 대신 세분화된 permission 문자열 (`user:delete`)로 접근을 제어한다.
+Authentication (who you are) and authorization (what you can do) are kept separate. Apply `PermissionsGuard` (authorization) after `JwtAuthGuard` (authentication) as a distinct guard. Control access using fine-grained permission strings (`user:delete`) instead of role names (`Role.ADMIN`).
 
-## Permission 체계 (CMF Hub)
+## Permission System (CMF Hub)
 
 ```
 Role "admin" → permissions: ["user:read", "user:create", "user:update", "user:delete", "texture:upload", "texture:delete"]
@@ -42,7 +42,7 @@ export class PermissionsGuard implements CanActivate {
       PERMISSIONS_KEY,
       [ctx.getHandler(), ctx.getClass()],
     )
-    if (!required?.length) return true  // 데코레이터 없으면 통과
+    if (!required?.length) return true  // pass if no decorator present
 
     const { user } = ctx.switchToHttp().getRequest()
     const dbUser = await this.usersService.findOneWithRoles(user.id)
@@ -53,7 +53,7 @@ export class PermissionsGuard implements CanActivate {
 }
 ```
 
-## 라우트에 적용 — JwtAuthGuard 다음에
+## Applying to Routes — after JwtAuthGuard
 
 ```typescript
 // users/users.controller.ts
@@ -62,7 +62,7 @@ import { AuthGuard } from '@nestjs/passport'
 import { PermissionsGuard, RequirePermissions } from '../auth/guards/permissions.guard'
 
 @Controller('users')
-@UseGuards(AuthGuard('jwt'), PermissionsGuard)  // 인증 → 권한 순서
+@UseGuards(AuthGuard('jwt'), PermissionsGuard)  // authentication → authorization order
 export class UsersController {
 
   @Get()
@@ -75,19 +75,19 @@ export class UsersController {
 }
 ```
 
-## UsersService — roles 포함 조회
+## UsersService — query with roles included
 
 ```typescript
 // users/users.service.ts
 findOneWithRoles(id: string) {
   return this.usersRepo.findOne({
     where: { id },
-    relations: ['roles'],  // permission 포함된 roles 로드
+    relations: ['roles'],  // load roles with permissions included
   })
 }
 ```
 
-## Role Entity (CMF Hub 구조)
+## Role Entity (CMF Hub structure)
 
 ```typescript
 // roles/entities/role.entity.ts
@@ -112,11 +112,11 @@ export class Role {
 
 ## Common Mistakes
 
-| 실수 | 수정 |
+| Mistake | Fix |
 |------|------|
-| Service에서 `user.role === 'admin'` 체크 | `PermissionsGuard`에서만 처리 |
-| 역할 이름(`UserRole.ADMIN`)으로 판단 | `user:delete` 같은 세분화된 permission 문자열 사용 |
-| User에 단일 `role` 컬럼 (`@Column enum`) | Role 엔티티 many-to-many — 복수 역할 + permissions 배열 |
-| `JwtAuthGuard`와 `PermissionsGuard`를 하나로 합침 | 인증 Guard + 권한 Guard 반드시 분리 |
-| `@UseGuards(PermissionsGuard)` 만 적용 | `@UseGuards(AuthGuard('jwt'), PermissionsGuard)` 순서 지킴 |
-| `roles` 없이 User 조회 | `findOne({ relations: ['roles'] })`로 권한 포함 로드 |
+| Checking `user.role === 'admin'` in Service | Handle only in `PermissionsGuard` |
+| Making decisions based on role name (`UserRole.ADMIN`) | Use fine-grained permission strings like `user:delete` |
+| Single `role` column on User (`@Column enum`) | Role entity many-to-many — multiple roles + permissions array |
+| Combining `JwtAuthGuard` and `PermissionsGuard` into one | Authentication guard + authorization guard must be separate |
+| Applying only `@UseGuards(PermissionsGuard)` | Follow `@UseGuards(AuthGuard('jwt'), PermissionsGuard)` order |
+| Querying User without `roles` | Load permissions with `findOne({ relations: ['roles'] })` |

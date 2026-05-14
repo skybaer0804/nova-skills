@@ -5,33 +5,33 @@ created: 2026-05-07
 updated: 2026-05-07
 ---
 
-# R3F Scene Design (진입점)
+# R3F Scene Design (Entry Point)
 
 ## Overview
-React에서 Three.js를 사용할 때는 vanilla Three.js(`new THREE.Scene()`) 대신 React Three Fiber(`<Canvas>`)를 사용한다. 코드 작성 전 이 스킬로 필요한 패턴을 결정한다.
+When using Three.js in React, use React Three Fiber (`<Canvas>`) instead of vanilla Three.js (`new THREE.Scene()`). Use this skill to decide which patterns are needed before writing any code.
 
-## 결정 트리
+## Decision Tree
 
-React 3D 씬을 만드는가?
+Are you building a React 3D scene?
 
-- **씬 기초(Canvas/Camera/Light/Mesh)가 필요한가?** → `three-scene-setup`
-- **Material/텍스처/PBR 설정이 필요한가?** → `three-materials`
-- **클릭/hover/카메라 컨트롤이 필요한가?** → `r3f-interaction`
-- **애니메이션(회전/이동/스프링)이 필요한가?** → `r3f-animation`
-- **많은 오브젝트(100+) 또는 GLTF 모델 로딩이 필요한가?** → `r3f-performance`
+- **Need scene basics (Canvas/Camera/Light/Mesh)?** → `three-scene-setup`
+- **Need Material/texture/PBR configuration?** → `three-materials`
+- **Need click/hover/camera controls?** → `r3f-interaction`
+- **Need animation (rotation/translation/spring)?** → `r3f-animation`
+- **Need many objects (100+) or GLTF model loading?** → `r3f-performance`
 
-## 기능별 스킬 조합
+## Skill Combinations by Scene Type
 
-| 씬 유형 | 필요한 스킬 조합 |
-|---------|-----------------|
-| 기본 3D 뷰어 | three-scene-setup → r3f-interaction |
-| 인터랙티브 제품 쇼케이스 | three-scene-setup → three-materials → r3f-interaction |
-| 애니메이션 씬 | three-scene-setup → r3f-animation |
-| GLTF 모델 뷰어 | three-scene-setup → r3f-performance → r3f-interaction |
-| GLTF + 애니메이션 씬 | three-scene-setup → r3f-performance → r3f-animation → r3f-interaction |
-| 풀 3D 앱 | three-scene-setup → three-materials → r3f-interaction → r3f-animation → r3f-performance |
+| Scene Type | Required Skill Combination |
+|------------|---------------------------|
+| Basic 3D viewer | three-scene-setup → r3f-interaction |
+| Interactive product showcase | three-scene-setup → three-materials → r3f-interaction |
+| Animated scene | three-scene-setup → r3f-animation |
+| GLTF model viewer | three-scene-setup → r3f-performance → r3f-interaction |
+| GLTF + animated scene | three-scene-setup → r3f-performance → r3f-animation → r3f-interaction |
+| Full 3D app | three-scene-setup → three-materials → r3f-interaction → r3f-animation → r3f-performance |
 
-## 패키지 설치
+## Package Installation
 
 ```bash
 pnpm add three @react-three/fiber @react-three/drei
@@ -40,10 +40,10 @@ pnpm add -D @types/three
 
 ## Common Mistakes
 
-| 실수 | 수정 |
-|------|------|
-| `new THREE.Scene()` + `WebGLRenderer` 직접 생성 | `<Canvas>` from `@react-three/fiber` 사용 |
-| 결정 트리 없이 바로 코드 작성 | 이 스킬로 필요한 패턴 분류 후 해당 스킬로 이동 |
-| drei 없이 OrbitControls 직접 구현 | `@react-three/drei` 헬퍼 활용 (`three-scene-setup`) |
-| GLTF 로딩에 Suspense 없이 useGLTF 사용 | `r3f-performance` 스킬 참조 |
-| `useFrame`에서 고정값으로 회전 (`+= 0.01`) | `delta` 사용 — `+= delta` (프레임 독립적) |
+| Mistake | Fix |
+|---------|-----|
+| Creating `new THREE.Scene()` + `WebGLRenderer` directly | Use `<Canvas>` from `@react-three/fiber` |
+| Writing code without going through the decision tree | Use this skill to classify the required patterns, then move to the relevant skill |
+| Implementing OrbitControls without drei | Use `@react-three/drei` helpers (`three-scene-setup`) |
+| Using `useGLTF` without Suspense for GLTF loading | Refer to the `r3f-performance` skill |
+| Fixed rotation increment in `useFrame` (`+= 0.01`) | Use `delta` — `+= delta` (frame-rate independent) |

@@ -9,19 +9,19 @@ updated: 2026-05-07
 
 ## Overview
 
-Node.js + pnpm 프로젝트의 GitHub Actions 워크플로우. PR 시 CI, `main` 푸시 시 배포를 분리된 파일로 관리한다.
+GitHub Actions workflows for Node.js + pnpm projects. CI on PRs and deployment on `main` push are managed as separate files.
 
 ## Quick Reference
 
-| 항목 | 올바른 값 | 잘못된 예 |
+| Item | Correct value | Wrong example |
 |---|---|---|
 | pnpm setup action | `pnpm/action-setup@v4` | `@v3` |
-| Node 캐시 설정 | `cache: 'pnpm'` (setup-node 내부) | 별도 `actions/cache` |
-| install 명령 | `pnpm install --frozen-lockfile` | `pnpm install` |
-| 권한 블록 | `permissions: contents: read` 명시 | 생략 |
-| 중복 실행 취소 | `concurrency` 그룹 설정 | 미설정 |
+| Node cache config | `cache: 'pnpm'` (inside setup-node) | Separate `actions/cache` |
+| Install command | `pnpm install --frozen-lockfile` | `pnpm install` |
+| Permissions block | Explicitly set `permissions: contents: read` | Omit |
+| Cancel duplicate runs | Configure `concurrency` group | Not configured |
 
-## 파일 구조
+## File Structure
 
 ```
 .github/
@@ -32,7 +32,7 @@ Node.js + pnpm 프로젝트의 GitHub Actions 워크플로우. PR 시 CI, `main`
 
 ## Prerequisites
 
-`package.json`에 `packageManager` 필드 필수 — pnpm 버전 고정:
+`packageManager` field is required in `package.json` to pin the pnpm version:
 
 ```json
 {
@@ -40,7 +40,7 @@ Node.js + pnpm 프로젝트의 GitHub Actions 워크플로우. PR 시 CI, `main`
 }
 ```
 
-## CI 워크플로우 (ci.yml)
+## CI Workflow (ci.yml)
 
 ```yaml
 name: CI
@@ -62,12 +62,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4  # packageManager 필드에서 버전 자동 감지
+      - uses: pnpm/action-setup@v4  # Auto-detects version from packageManager field
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'  # 별도 actions/cache 불필요
+          cache: 'pnpm'  # No separate actions/cache needed
 
       - run: pnpm install --frozen-lockfile
 
@@ -76,7 +76,7 @@ jobs:
       - run: pnpm test
 ```
 
-## 배포 워크플로우 (deploy.yml)
+## Deploy Workflow (deploy.yml)
 
 ```yaml
 name: Deploy
@@ -87,7 +87,7 @@ on:
 
 concurrency:
   group: deploy-${{ github.ref }}
-  cancel-in-progress: false  # 배포는 취소하지 않음
+  cancel-in-progress: false  # Do not cancel deployments
 
 permissions:
   contents: read
@@ -95,7 +95,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: production  # GitHub Environments secrets 사용
+    environment: production  # Uses GitHub Environments secrets
     steps:
       - uses: actions/checkout@v4
 
@@ -109,16 +109,16 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
-      # 배포 스텝 (플랫폼에 맞게 교체)
+      # Deploy step (replace with your platform)
       - name: Deploy
         run: pnpm deploy:prod
         env:
           DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
 ```
 
-## NestJS 추가 패턴
+## NestJS Additional Pattern
 
-DB 의존이 있는 통합 테스트는 서비스 컨테이너 사용:
+For integration tests with DB dependencies, use service containers:
 
 ```yaml
 services:
@@ -143,11 +143,11 @@ steps:
 
 ## Common Mistakes
 
-| 실수 | 수정 |
+| Mistake | Fix |
 |---|---|
-| `pnpm/action-setup@v3` | `@v4` 사용 — packageManager 자동 감지 지원 |
-| 별도 `actions/cache` 스텝 | `setup-node`의 `cache: 'pnpm'`으로 대체 |
-| `pnpm install` (lock 무시) | `--frozen-lockfile` 필수 — CI에서 lock 우회 방지 |
-| `permissions` 생략 | `contents: read` 명시 — 최소 권한 원칙 |
-| `concurrency` 미설정 | PR에 동일 브랜치 중복 실행 누적됨 |
-| `environment: production` 생략 | Environments secrets에 접근 불가 |
+| `pnpm/action-setup@v3` | Use `@v4` — supports auto-detection from packageManager |
+| Separate `actions/cache` step | Replace with `cache: 'pnpm'` in setup-node |
+| `pnpm install` (ignores lock) | `--frozen-lockfile` is required — prevents lock bypass in CI |
+| Omitting `permissions` | Explicitly set `contents: read` — principle of least privilege |
+| No `concurrency` configured | Duplicate runs accumulate for the same branch on PRs |
+| Omitting `environment: production` | Cannot access Environments secrets |

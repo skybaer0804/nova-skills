@@ -8,9 +8,9 @@ updated: 2026-05-07
 # R3F Interaction
 
 ## Overview
-R3F에서 3D 오브젝트 이벤트는 mesh JSX에 직접 핸들러를 붙인다. DOM `addEventListener`를 사용하지 않는다. 카메라 컨트롤은 drei `OrbitControls`를 사용한다.
+In R3F, attach event handlers directly to mesh JSX elements for 3D object events. Do not use DOM `addEventListener`. Use drei `OrbitControls` for camera controls.
 
-## Click + Hover 이벤트
+## Click + Hover Events
 
 ```tsx
 import { useState, useRef } from 'react'
@@ -27,7 +27,7 @@ function InteractiveBox() {
     <mesh
       ref={meshRef}
       onClick={(e) => {
-        e.stopPropagation()           // 이벤트 버블링 차단
+        e.stopPropagation()           // Stop event bubbling
         setClicked(c => !c)
         console.log('position:', meshRef.current?.position)
       }}
@@ -55,33 +55,33 @@ function Scene() {
       <ambientLight intensity={0.5} />
       <directionalLight position={[5, 5, 5]} />
       <InteractiveBox />
-      <OrbitControls />    {/* drei — 마우스 드래그 카메라 */}
+      <OrbitControls />    {/* drei — mouse drag camera */}
     </Canvas>
   )
 }
 ```
 
-## useRef로 mesh 직접 접근
+## Accessing the Mesh Directly with useRef
 
 ```tsx
 const meshRef = useRef<Mesh>(null)
 
-// 클릭 시 position 읽기
+// Read position on click
 onClick={() => {
   if (meshRef.current) {
     console.log(meshRef.current.position)
-    meshRef.current.scale.set(1.2, 1.2, 1.2)  // 클릭 시 크기 변경
+    meshRef.current.scale.set(1.2, 1.2, 1.2)  // Change size on click
   }
 }}
 ```
 
-## OrbitControls 옵션
+## OrbitControls Options
 
 ```tsx
 <OrbitControls
   enableZoom={true}
-  enablePan={false}           // 패닝 비활성화
-  maxPolarAngle={Math.PI / 2} // 카메라가 바닥 아래로 못 내려감
+  enablePan={false}           // Disable panning
+  maxPolarAngle={Math.PI / 2} // Prevent camera from going below the floor
   minDistance={2}
   maxDistance={10}
 />
@@ -89,11 +89,11 @@ onClick={() => {
 
 ## Common Mistakes
 
-| 실수 | 수정 |
-|------|------|
-| `canvas.addEventListener('click', ...)` | mesh JSX에 `onClick` 직접 부착 |
-| `document.querySelector`로 mesh 선택 | `useRef<Mesh>()` 사용 |
-| hover를 `window.mousemove`로 처리 | `onPointerOver` / `onPointerOut` 사용 |
-| OrbitControls 직접 구현 | drei `<OrbitControls />` 사용 |
-| `e.stopPropagation()` 누락 | 이벤트가 뒤 오브젝트까지 전파됨 |
-| cursor 변경 안 함 | `onPointerOver`에서 `document.body.style.cursor = 'pointer'` |
+| Mistake | Fix |
+|---------|-----|
+| `canvas.addEventListener('click', ...)` | Attach `onClick` directly to mesh JSX |
+| Selecting a mesh with `document.querySelector` | Use `useRef<Mesh>()` |
+| Handling hover with `window.mousemove` | Use `onPointerOver` / `onPointerOut` |
+| Implementing OrbitControls manually | Use drei `<OrbitControls />` |
+| Missing `e.stopPropagation()` | Event propagates through to objects behind |
+| Not changing cursor | Set `document.body.style.cursor = 'pointer'` inside `onPointerOver` |

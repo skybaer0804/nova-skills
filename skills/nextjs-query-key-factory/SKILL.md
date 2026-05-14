@@ -8,27 +8,27 @@ updated: 2026-05-04
 # Next.js Query Key Factory
 
 ## Overview
-Query Key Factory 패턴으로 캐시 키를 중앙화하고, QueryClient를 싱글톤으로 설정한다. 캐시 키 충돌 방지, 계층적 무효화, 일관된 캐시 동작을 보장한다.
+Centralize cache keys with the Query Key Factory pattern and configure QueryClient as a singleton. Prevents cache key collisions, enables hierarchical invalidation, and ensures consistent cache behavior.
 
 ## When to Use
 
-- query key가 인라인 문자열/배열로 3곳 이상 흩어진 경우
-- "유저 관련 쿼리 전체" 무효화가 필요한 경우
-- 새 Next.js 프로젝트에서 TanStack Query 초기 설정 시
-- 테스트 간 캐시 상태가 공유되는 경우
+- Query keys are scattered as inline strings/arrays in 3 or more places
+- Need to invalidate "all queries related to a user" at once
+- Setting up TanStack Query for the first time in a new Next.js project
+- Cache state is shared between tests
 
-**예외:** 앱 전체 쿼리가 3개 미만이면 인라인 `['entity', id]` 배열 허용 — Factory는 과잉 설계.
+**Exception:** If the entire app has fewer than 3 queries, inline `['entity', id]` arrays are allowed — Factory is over-engineering.
 
 ## Enforcement Rules
 
-| 패턴 | 근거 | 예외 허용 케이스 |
-|------|------|----------------|
-| 모든 key를 중앙 Factory 파일에 정의 | 흩어진 key는 오타·불일치로 캐시 버그 유발 | 앱 전체 쿼리 3개 미만 |
-| 계층 구조: `all` → `lists` → `detail(id)` | 상위 key 무효화 시 하위 전체 무효화 | - |
-| `QueryClient` 싱글톤을 `app/providers.tsx`에서 생성 | 컴포넌트 내부 생성 시 리렌더마다 새 인스턴스 → 캐시 소실 | 테스트 파일은 테스트마다 새 인스턴스 필수 (캐시 격리) |
-| `defaultOptions`에 `staleTime`, `retry` 전역 설정 | 쿼리마다 반복 설정 방지 | 특정 쿼리에 다른 값 필요 시 쿼리 레벨에서 오버라이드 허용 |
+| Pattern | Rationale | Allowed Exceptions |
+|---------|-----------|-------------------|
+| Define all keys in a central Factory file | Scattered keys cause cache bugs from typos and mismatches | Fewer than 3 queries across the entire app |
+| Hierarchy: `all` → `lists` → `detail(id)` | Invalidating a parent key invalidates all children | - |
+| Create `QueryClient` singleton in `app/providers.tsx` | Creating inside a component generates a new instance on every re-render → cache lost | Test files must create a new instance per test (cache isolation) |
+| Set `staleTime` and `retry` globally in `defaultOptions` | Prevents repetitive configuration per query | Override at query level when a specific query needs different values |
 
-## 1. Key Factory 패턴
+## 1. Key Factory Pattern
 
 ```ts
 // lib/query-keys.ts
@@ -48,22 +48,22 @@ export const productKeys = {
 }
 ```
 
-**사용 예시:**
+**Usage examples:**
 ```ts
-// 특정 유저 페칭
+// Fetch a specific user
 useQuery({ queryKey: userKeys.detail(userId), queryFn: () => getUser(userId) })
 
-// 유저 관련 캐시 전체 무효화 (list + detail 모두)
+// Invalidate all user-related cache (both list + detail)
 queryClient.invalidateQueries({ queryKey: userKeys.all })
 
-// 유저 목록만 무효화 (detail 제외)
+// Invalidate user list only (excludes detail)
 queryClient.invalidateQueries({ queryKey: userKeys.lists() })
 
-// 특정 유저만 무효화
+// Invalidate a specific user only
 queryClient.invalidateQueries({ queryKey: userKeys.detail(userId) })
 ```
 
-## 2. QueryClient 싱글톤 — app/providers.tsx
+## 2. QueryClient Singleton — app/providers.tsx
 
 ```tsx
 // app/providers.tsx
@@ -75,15 +75,15 @@ function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 60 * 1000,          // 기본 1분 — 쿼리별 오버라이드 가능
-        retry: 1,                       // 실패 시 1회 재시도
-        refetchOnWindowFocus: false,    // 포커스 시 자동 리페칭 비활성화
+        staleTime: 60 * 1000,          // default 1 min — overridable per query
+        retry: 1,                       // retry once on failure
+        refetchOnWindowFocus: false,    // disable auto refetch on focus
       },
     },
   })
 }
 
-// 서버: 요청마다 새 인스턴스 / 클라이언트: 한 번 생성 후 재사용
+// Server: new instance per request / Client: create once and reuse
 let browserQueryClient: QueryClient | undefined
 
 function getQueryClient() {
@@ -117,24 +117,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
-## 3. 테스트 환경 — 인스턴스 격리
+## 3. Test Environment — Instance Isolation
 
 ```tsx
-// 테스트 파일: 캐시 격리를 위해 매 테스트마다 새 QueryClient 생성
+// Test file: create a new QueryClient per test for cache isolation
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render } from '@testing-library/react'
 
 function createTestQueryClient() {
   return new QueryClient({
     defaultOptions: {
-      queries: { retry: false },     // 테스트에서 재시도 비활성화
+      queries: { retry: false },     // disable retries in tests
       mutations: { retry: false },
     },
   })
 }
 
 export function renderWithQuery(ui: React.ReactElement) {
-  const queryClient = createTestQueryClient()  // 테스트마다 새 인스턴스
+  const queryClient = createTestQueryClient()  // new instance per test
   return render(
     <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
   )
@@ -143,10 +143,10 @@ export function renderWithQuery(ui: React.ReactElement) {
 
 ## Common Mistakes
 
-| 실수 | 수정 |
-|------|------|
-| 파일 곳곳에 인라인 `['users', id]` | `lib/query-keys.ts`에 중앙화 |
-| `invalidateQueries({ queryKey: ['users'] })`가 `['users', 'list']`를 무효화 못 함 | Factory 사용: `userKeys.all`은 모든 하위 키 매칭 |
-| 컴포넌트 내부에서 `new QueryClient()` | `providers.tsx`로 이동 |
-| 모든 테스트가 QueryClient 하나를 공유 | `createTestQueryClient()`로 테스트마다 격리 |
-| `defaultOptions`에 `staleTime` 미설정 | 전역 설정으로 기본값 통제 |
+| Mistake | Fix |
+|---------|-----|
+| Inline `['users', id]` scattered across files | Centralize in `lib/query-keys.ts` |
+| `invalidateQueries({ queryKey: ['users'] })` fails to invalidate `['users', 'list']` | Use Factory: `userKeys.all` matches all child keys |
+| `new QueryClient()` inside a component | Move to `providers.tsx` |
+| All tests sharing a single QueryClient | Isolate per test with `createTestQueryClient()` |
+| `staleTime` not set in `defaultOptions` | Control defaults with global configuration |

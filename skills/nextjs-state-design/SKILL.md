@@ -87,7 +87,7 @@ export const useCartStore = create<CartStore>((set) => ({
 
 Good for: cart, auth user info, UI preferences, notifications.
 
-> **Zustand 선택 후 구현 방법:** `nextjs-zustand` 스킬 참조 (slice 패턴, selector 최적화, persist, devtools).
+> **After choosing Zustand, for implementation details:** refer to the `nextjs-zustand` skill (slice pattern, selector optimization, persist, devtools).
 
 ### Local State — useState / useReducer
 Use when: state is confined to one component or its direct children.
