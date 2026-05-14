@@ -5,44 +5,44 @@ created: 2026-05-06
 updated: 2026-05-06
 ---
 
-# NestJS Module Design (진입점)
+# NestJS Module Design (Entry Point)
 
 ## Overview
-NestJS 기능 구현 전에 필요한 패턴을 먼저 결정한다. 코드 작성 전 이 스킬로 방향을 잡고, 필요한 구현 스킬로 이동한다.
+Decide which patterns are needed before implementing a NestJS feature. Use this skill to set direction before writing any code, then move to the required implementation skill.
 
-## 결정 트리
+## Decision Tree
 
-새 NestJS 기능을 만드는가?
+Are you building a new NestJS feature?
 
-- **모듈 파일 구조 설계가 필요한가?** → `nestjs-module-structure`
-  (Controller/Service/Repository/Entity/DTO 파일 배치 및 @Module 연결)
-- **로그인 / JWT 인증이 필요한가?** → `nestjs-auth-jwt`
+- **Do you need to design the module file structure?** → `nestjs-module-structure`
+  (Controller/Service/Repository/Entity/DTO file layout and @Module wiring)
+- **Do you need login / JWT authentication?** → `nestjs-auth-jwt`
   (Passport Local Strategy + RS256 JWT + JwtAuthGuard)
-- **역할/권한 제어가 필요한가?** → `nestjs-rbac`
-  (Role → Permission 세분화, PermissionsGuard — RolesGuard가 아님)
-- **DB 엔티티/쿼리 설계가 필요한가?** → `nestjs-typeorm`
-  (TypeORM Entity, Repository 패턴, Migration)
-- **파일 업로드/썸네일이 필요한가?** → `nestjs-file-upload`
-  (Multer 설정 + Sharp 썸네일 파이프라인)
-- **요청 데이터 검증이 필요한가?** → `nestjs-validation`
-  (class-validator DTO, ValidationPipe 전역 설정)
+- **Do you need role/permission control?** → `nestjs-rbac`
+  (Role → Permission granularity, PermissionsGuard — not RolesGuard)
+- **Do you need DB entity/query design?** → `nestjs-typeorm`
+  (TypeORM Entity, Repository pattern, Migration)
+- **Do you need file upload/thumbnail?** → `nestjs-file-upload`
+  (Multer setup + Sharp thumbnail pipeline)
+- **Do you need request data validation?** → `nestjs-validation`
+  (class-validator DTO, ValidationPipe global setup)
 
-## CMF Hub 기능별 스킬 조합
+## CMF Hub Skill Combinations by Feature
 
-| 기능 | 필요한 스킬 조합 |
-|------|-----------------|
-| 새 도메인 모듈 추가 | module-structure → typeorm → validation |
-| 인증 시스템 구축 | auth-jwt → rbac |
-| 파일 관리 기능 | module-structure → file-upload → typeorm |
-| 전체 CRUD API | module-structure → typeorm → validation → rbac |
-| 텍스처 업로드 (CMF Hub 전체) | auth-jwt → rbac → module-structure → typeorm → file-upload → validation |
+| Feature | Required Skill Combination |
+|---------|---------------------------|
+| Add new domain module | module-structure → typeorm → validation |
+| Build authentication system | auth-jwt → rbac |
+| File management feature | module-structure → file-upload → typeorm |
+| Full CRUD API | module-structure → typeorm → validation → rbac |
+| Texture upload (CMF Hub full) | auth-jwt → rbac → module-structure → typeorm → file-upload → validation |
 
 ## Common Mistakes
 
-| 실수 | 수정 |
-|------|------|
-| 결정 트리 없이 바로 Controller 코드 작성 | 이 스킬로 필요한 패턴을 먼저 분류 후 해당 스킬로 이동 |
-| 인증과 권한을 같은 Guard(`RolesGuard`)로 처리 | `nestjs-auth-jwt`(인증) + `nestjs-rbac`(권한)은 별도 Guard |
-| 역할 이름(`UserRole.ADMIN`)으로 접근 제어 | `user:delete` 같은 세분화된 permission 문자열 사용 (`nestjs-rbac`) |
-| Entity 없이 Service 먼저 작성 | `nestjs-typeorm` → `nestjs-module-structure` 순서 |
-| `npm install` 사용 | `pnpm add` 사용 |
+| Mistake | Fix |
+|---------|-----|
+| Writing Controller code directly without the decision tree | Use this skill to categorize required patterns first, then move to the relevant skill |
+| Handling authentication and authorization with the same Guard (`RolesGuard`) | `nestjs-auth-jwt` (authentication) + `nestjs-rbac` (authorization) must be separate Guards |
+| Access control by role name (`UserRole.ADMIN`) | Use granular permission strings like `user:delete` (`nestjs-rbac`) |
+| Writing Service before Entity | Follow `nestjs-typeorm` → `nestjs-module-structure` order |
+| Using `npm install` | Use `pnpm add` |
