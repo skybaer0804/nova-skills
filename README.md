@@ -52,6 +52,7 @@
   - [agent-ucp](#agent-ucp)
   - [agent-ap2](#agent-ap2)
   - [agent-architect-tdd-loop](#agent-architect-tdd-loop)
+  - [agent-qa-browser](#agent-qa-browser)
 - [스킬 사용 방법](#스킬-사용-방법)
 - [스킬 적용 흐름](#스킬-적용-흐름)
 - [버전 히스토리](#버전-히스토리)
@@ -758,6 +759,48 @@ export function useProductList() {
 
 ---
 
+### agent-qa-browser
+
+> **언제 사용하나요?** localhost 앱의 자율 QA를 수행할 때 — 브라우저를 직접 제어하여 사용자 시나리오를 자동 검증하고, 버그 증거(스크린샷/성공 로그)를 MySQL DB에 저장하며, 마크다운 리포트로 요약할 때
+
+Playwright MCP로 브라우저를 직접 제어하며 localhost 앱을 자율 QA하는 3역할 에이전트.
+
+**사전 요구사항**
+
+1. MySQL 시작:
+   ```bash
+   npm run memory:up
+   ```
+
+2. `.claude/settings.local.json` 생성 (gitignored — 수동 생성 필요):
+   ```json
+   {
+     "mcpServers": {
+       "playwright": {
+         "command": "npx",
+         "args": ["@playwright/mcp@latest"]
+       }
+     }
+   }
+   ```
+
+**사용 방법**
+
+1. **QA Architect** — 시나리오를 단계 분해하고 `docs/qa-state.md` 초기화
+2. **QA Browser** — 브라우저를 직접 제어하며 4중 검증 + 복구 프로토콜 실행
+3. **QA Reporter** — `node scripts/qa-reporter.mjs <session_id>` 로 DB 저장 + 마크다운 리포트 생성
+
+자세한 사용법: `skills/agent-qa-browser/SKILL.md`
+
+**리포트 정리**
+
+```bash
+# 정상 단계 스크린샷 삭제 (BUG_EVIDENCE 보존)
+node scripts/qa-reporter.mjs --clean <qa_session_id>
+```
+
+---
+
 ## 스킬 사용 방법
 
 Claude Code에서 스킬은 자동으로 감지되어 적용됩니다.  
@@ -856,6 +899,9 @@ Next.js에서 에이전트 응답을 실시간으로 스트리밍해야 해.
 
 설계자-구현자-테스터 루프로 기능을 TDD로 구현해야 해.
 → agent-architect-tdd-loop 스킬 자동 적용
+
+localhost 앱의 자율 QA를 해야 해 (브라우저 직접 제어, 스크린샷 캡처).
+→ agent-qa-browser 스킬 자동 적용
 ```
 
 ---
