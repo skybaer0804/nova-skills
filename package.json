@@ -36,7 +36,8 @@
   },
   "devDependencies": {
     "mysql2": "^3.11.0",
-    "vitest": "^2.1.0"
+    "vitest": "^2.1.0",
+    "yaml": "^2.9.0"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.2"
