@@ -1,6 +1,6 @@
 ---
 name: agent-qa-browser
-description: Use when running automated QA on a localhost Next.js/NestJS app — browser control, screenshot lifecycle, bug detection, DB reporting via Playwright MCP.
+description: Use when running QA against a localhost Next.js/NestJS app and the agent needs structured browser control, screenshot lifecycle, bug detection (console/UI/network), or DB-backed reporting — or when no Architect → Browser → Reporter handoff is in place.
 created: 2026-05-14
 updated: 2026-05-14
 ---
