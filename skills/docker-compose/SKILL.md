@@ -67,7 +67,7 @@ COPY package.json pnpm-lock.yaml ./
 
 # Development stage — hot reload
 FROM base AS development
-RUN pnpm install
+RUN pnpm install --frozen-lockfile   # consistent with builder/prod — no silent lockfile drift
 COPY . .
 CMD ["pnpm", "start:dev"]
 
@@ -116,3 +116,4 @@ coverage
 | Single-stage Dockerfile for dev/prod | Use multi-stage: dev (hot reload) / builder / production (lean) |
 | `target: development` set but no Dockerfile | `target` in docker-compose must be used with the Dockerfile above |
 | TypeORM/Prisma connection failing | Add `DATABASE_URL` env var: `postgresql://user:pass@db:5432/db` |
+| Stale deps after editing `package.json` | The anonymous `/app/node_modules` volume keeps old deps — `docker compose build` + recreate (or `down -v`) to refresh |
