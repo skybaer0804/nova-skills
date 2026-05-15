@@ -41,6 +41,7 @@ function MetalSphere() {
 ```tsx
 import { useTexture } from '@react-three/drei'
 import { Suspense } from 'react'
+import * as THREE from 'three'
 
 function WoodCube() {
   // useTexture — must be used inside Suspense
@@ -49,6 +50,8 @@ function WoodCube() {
     '/textures/wood_roughness.jpg',
     '/textures/wood_normal.jpg',
   ])
+  // color/albedo map must be sRGB; data maps (roughness/normal) stay linear
+  colorMap.colorSpace = THREE.SRGBColorSpace
 
   return (
     <mesh>
@@ -94,3 +97,4 @@ function Scene() {
 | Using `new THREE.TextureLoader().load()` | Use `useTexture` (drei) |
 | Using `useTexture` outside of Suspense | Must be inside `<Suspense>` |
 | Leaving roughness/metalness at default values | Set them intentionally — defaults vary by material |
+| Color/albedo texture looks washed out / desaturated | Set `colorMap.colorSpace = THREE.SRGBColorSpace` — only the color map; roughness/normal stay linear |

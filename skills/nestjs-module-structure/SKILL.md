@@ -10,7 +10,7 @@ updated: 2026-05-07
 ## Overview
 NestJS features are built as self-contained modules separated into 4 layers: Controller / Service / Entity / DTO. Each file has a single responsibility, and the Module binds them together with the @Module decorator.
 
-## File Structure (CMF Hub — materials example)
+## File Structure (materials example)
 
 ```
 materials/
@@ -61,6 +61,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Material } from './entities/material.entity'
 import { CreateMaterialDto } from './dto/create-material.dto'
+import { UpdateMaterialDto } from './dto/update-material.dto'
 
 @Injectable()
 export class MaterialsService {

@@ -10,7 +10,7 @@ updated: 2026-05-07
 ## Overview
 Authentication (who you are) and authorization (what you can do) are kept separate. Apply `PermissionsGuard` (authorization) after `JwtAuthGuard` (authentication) as a distinct guard. Control access using fine-grained permission strings (`user:delete`) instead of role names (`Role.ADMIN`).
 
-## Permission System (CMF Hub)
+## Permission System
 
 ```
 Role "admin" → permissions: ["user:read", "user:create", "user:update", "user:delete", "texture:upload", "texture:delete"]
@@ -46,6 +46,7 @@ export class PermissionsGuard implements CanActivate {
 
     const { user } = ctx.switchToHttp().getRequest()
     const dbUser = await this.usersService.findOneWithRoles(user.id)
+    if (!dbUser) return false   // user deleted/disabled after token issued → deny (403), not 500
     const userPerms = dbUser.roles.flatMap(r => r.permissions)
 
     return required.every(p => userPerms.includes(p))
@@ -87,7 +88,7 @@ findOneWithRoles(id: string) {
 }
 ```
 
-## Role Entity (CMF Hub structure)
+## Role Entity
 
 ```typescript
 // roles/entities/role.entity.ts
@@ -120,3 +121,5 @@ export class Role {
 | Combining `JwtAuthGuard` and `PermissionsGuard` into one | Authentication guard + authorization guard must be separate |
 | Applying only `@UseGuards(PermissionsGuard)` | Follow `@UseGuards(AuthGuard('jwt'), PermissionsGuard)` order |
 | Querying User without `roles` | Load permissions with `findOne({ relations: ['roles'] })` |
+| No null check on the DB user in the guard | Deleted/disabled user with a still-valid token → `null.roles` throws 500 instead of 403; add `if (!dbUser) return false` |
+| Assuming `@UseGuards(PermissionsGuard)` protects every route | `if (!required?.length) return true` is fail-open by design — a route with no `@RequirePermissions` is open to any authenticated user; decorate every protected route |

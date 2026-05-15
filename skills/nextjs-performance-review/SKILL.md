@@ -76,11 +76,7 @@ const inter = Inter({ subsets: ['latin'], display: 'swap' })
 
 ## 5. React Re-render Optimization
 
-**Find unnecessary re-renders:**
-```tsx
-// Add temporarily to debug
-import { useRenderCount } from '@/hooks/useRenderCount' // or React DevTools Profiler
-```
+**Find unnecessary re-renders:** record an interaction in the React DevTools Profiler and look for components re-rendering with unchanged props. For a quick inline count while debugging, increment a `useRef` in the render body and log it — remove before commit.
 
 **When to memoize:**
 
@@ -115,15 +111,17 @@ const [user, posts] = await Promise.all([getUser(id), getPosts(id)])
 | CLS | < 0.1 | Images without dimensions, font swap |
 | INP | < 200ms | Heavy event handlers, blocking JS |
 
-## 8. Partial Prerendering (PPR) — Next.js 15+
+## 8. Partial Prerendering (PPR)
 
-PPR mixes static shell + dynamic holes in one request. Use when a page is mostly static but has a few dynamic sections.
+PPR mixes static shell + dynamic holes in one request. Use when a page is mostly static but has a few dynamic sections. On stable Next.js 15, PPR is incremental-only — opt in per route; `ppr: true` (all routes) requires a canary build.
 
 ```tsx
 // next.config.ts
-experimental: { ppr: true }
+experimental: { ppr: 'incremental' }
 
-// page.tsx — static shell renders instantly
+// page.tsx — opt this route into PPR; static shell renders instantly
+export const experimental_ppr = true
+
 export default function Page() {
   return (
     <main>
@@ -137,3 +135,15 @@ export default function Page() {
 ```
 
 **Use PPR when:** hero/nav is static but cart/recommendations are user-specific.
+
+## Common Mistakes
+
+| Mistake | Fix |
+|---------|-----|
+| Raw `<img>` tags | Use `next/image` with width/height or `fill` |
+| `cache: 'no-store'` on non-realtime pages | Use `force-cache` or `revalidate: N` |
+| Sequential `await` for independent data | `Promise.all` to parallelize |
+| Above-the-fold image without `priority` | Add `priority` to the LCP image |
+| Memoizing everything preemptively | Memoize only what the Profiler flags |
+| Heavy Client Component with no interactivity | Move to a Server Component |
+| `import _ from 'lodash'` (whole library) | Import the submodule: `import debounce from 'lodash/debounce'` |

@@ -44,8 +44,9 @@ export async function onRequestError(
 }
 ```
 
-Enable in `next.config.ts`:
+`instrumentation.ts` runs automatically in Next.js 15+. For Next.js 13–14, opt in via `next.config.ts`:
 ```ts
+// Next.js 13–14 only — the option was removed in 15+ (always on)
 experimental: { instrumentationHook: true }
 ```
 
@@ -107,7 +108,7 @@ export async function POST(req: NextRequest) {
 ## Checklist
 
 - [ ] `instrumentation.ts` at project root (not inside `/app`)
-- [ ] `instrumentationHook: true` in `next.config.ts` (Next.js <15.3)
+- [ ] Next.js 13–14 only: `instrumentationHook: true` in `next.config.ts` (automatic in 15+)
 - [ ] `error.tsx` calls logger in `useEffect`, not directly in render
 - [ ] `digest` included in both server and client logs for correlation
 - [ ] Logging failures are swallowed (never crash the error UI)
@@ -121,4 +122,4 @@ export async function POST(req: NextRequest) {
 | Logging inside render body | Move to `useEffect` — render can run multiple times |
 | Awaiting log fetch in error.tsx | Fire-and-forget; blocking delays user seeing the error UI |
 | Logging raw `error.stack` in production | Sanitize or use `digest` only for prod, full stack for dev |
-| Not enabling `instrumentationHook` | Server errors silently dropped in Next.js <15.3 |
+| Forgetting `instrumentationHook` on Next.js 13–14 | Server errors silently dropped — not needed on 15+ (automatic) |

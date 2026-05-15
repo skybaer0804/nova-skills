@@ -43,7 +43,9 @@ Admin               Agent                       Vendor
 ## Python — Full AP2 Flow
 
 ```python
-# pip install ap2-sdk
+# pip install git+https://github.com/google-agentic-commerce/AP2.git@main
+# verify module paths and type names against current AP2 SDK docs
+# (current SDK uses ap2.sdk.* modules, not ap2.types.*)
 from ap2.types.mandate import IntentMandate, PaymentMandate, PaymentMandateContents
 from ap2.types.payment_receipt import PaymentReceipt, Success
 from ap2.types.common import PaymentItem, PaymentCurrencyAmount
@@ -76,11 +78,22 @@ mandate = PaymentMandate(
     )
 )
 
-# Step 3: Admin signs (real environment: JWT / biometric / hardware key)
-mandate.user_authorization = sign_mandate(mandate)  # varies by implementation
+# Step 3: Admin signs — THIS IS THE SECURITY-CRITICAL CORE, NOT A STUB.
+# user_authorization MUST be a cryptographic signature over a canonical
+# serialization of payment_mandate_contents (amount + merchant + ids),
+# produced with an admin-held key the agent cannot access
+# (passkey/WebAuthn, hardware key, or a JWT signed by the admin's private key).
+# A non-crypto "approved: true" marker provides ZERO non-repudiation.
+mandate.user_authorization = sign_mandate(mandate)  # must implement the contract above
 
 # Step 4: Attach mandate in header when calling UCP checkout-sessions/{id}/complete
 # AP2-Payment-Mandate: <serialized mandate>
+
+# Step 4.5: Verifier (merchant/PSP) MUST validate BEFORE charging:
+#   - signature verifies against the admin's PUBLIC key
+#   - signed contents match the amount/merchant actually being charged
+#   - mandate not expired and within the IntentMandate guardrails
+# Reject (do not charge) on any failure. No verification = no non-repudiation.
 
 # Step 5: Save PaymentReceipt (audit trail — must be persisted permanently)
 receipt = PaymentReceipt(
@@ -90,6 +103,41 @@ receipt = PaymentReceipt(
     payment_status=Success(merchant_confirmation_id="ORD-A1B2C3"),
 )
 db.save(receipt)  # must persist permanently
+```
+
+## Signing & Verification (SDK-agnostic reference)
+
+`sign_mandate` and the verifier are the security core — implement them with real
+asymmetric crypto, not a marker. Example with Ed25519 over a canonical JSON
+serialization. The admin private key must live where the agent cannot read it
+(HSM / passkey / KMS); the snippet uses a local key only to show the contract.
+
+```python
+import json
+from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+    Ed25519PrivateKey, Ed25519PublicKey,
+)
+from cryptography.exceptions import InvalidSignature
+
+def canonical_bytes(contents: dict) -> bytes:
+    # Deterministic: sort keys, no whitespace — verifier must reproduce identically
+    return json.dumps(contents, sort_keys=True, separators=(",", ":")).encode()
+
+# Admin side — sign the bound payment fields
+def sign_mandate(contents: dict, admin_key: Ed25519PrivateKey) -> bytes:
+    return admin_key.sign(canonical_bytes(contents))
+
+# Merchant/PSP side — verify BEFORE charging
+def verify_mandate(contents: dict, signature: bytes,
+                   admin_pubkey: Ed25519PublicKey,
+                   charge_amount, charge_merchant) -> bool:
+    try:
+        admin_pubkey.verify(signature, canonical_bytes(contents))
+    except InvalidSignature:
+        return False
+    # Re-bind: signed values must match what is actually being charged
+    return (contents["payment_details_total"] == charge_amount
+            and contents["merchant_agent"] == charge_merchant)
 ```
 
 ## IntentMandate vs PaymentMandate
@@ -110,6 +158,9 @@ db.save(receipt)  # must persist permanently
 | Using AP2 without UCP | AP2 is used for payment authorization after UCP checkout completes |
 | Sending mandate without `user_authorization` signature | Mandate must be signed before sending |
 | Attempting payment after IntentMandate expiry | Check `intent_expiry` and renew before proceeding |
+| Implementing `sign_mandate` as a stub / plaintext "approved" marker | It is the cryptographic core — sign canonical mandate bytes with an admin-held key the agent cannot forge |
+| Signature does not cover amount + merchant | A signature omitting the charged values lets a compromised agent alter them undetected — bind all payment fields |
+| Merchant accepts the mandate without verifying the signature | Verify against the admin public key and re-bind the verified amount/merchant before charging |
 
 ## Official Docs
 Edge cases: https://ap2-protocol.org/

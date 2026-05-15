@@ -10,8 +10,6 @@ updated: 2026-05-04
 ## Overview
 Replace manual `useEffect + useState` data fetching with TanStack Query v5. Handles caching, background refetching, loading/error states, and mutations with cache synchronization.
 
-> **v4 → v5 changes:** `isLoading` → `isPending`, `suspense: true` option removed → use `useSuspenseQuery`, `cacheTime` → `gcTime`
-
 ## When to Use TanStack Query
 
 ```
@@ -47,7 +45,7 @@ function ProductDetail({ id }: { id: string }) {
     staleTime: 60 * 1000,                  // always specified
   })
 
-  if (isPending) return <Skeleton />       // v4: isLoading
+  if (isPending) return <Skeleton />
   if (isError) return <ErrorMessage />
 
   return <div>{data.name}</div>
@@ -114,10 +112,9 @@ const mutation = useMutation({
 
 **Exception:** When brief inconsistency is acceptable (e.g., likes, view counts), `onSuccess` invalidation alone may be used without `onMutate`/`onError`.
 
-## 4. Suspense Integration (v5)
+## 4. Suspense Integration
 
 ```tsx
-// v5: use useSuspenseQuery hook instead of the suspense: true option
 import { useSuspenseQuery } from '@tanstack/react-query'
 
 function ProductList() {

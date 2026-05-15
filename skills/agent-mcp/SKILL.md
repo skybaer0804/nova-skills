@@ -67,12 +67,12 @@ await client.close()  // must close
 ```python
 # pip install google-adk
 from google.adk.agents import Agent
-from google.adk.tools.mcp_tool.mcp_toolset import McpToolset, StdioConnectionParams, ServerParameters
+from google.adk.tools.mcp_tool.mcp_toolset import McpToolset, StdioConnectionParams, StdioServerParameters
 
 # Connect to an existing MCP server (ADK acts as client)
 db_tools = McpToolset(
     connection_params=StdioConnectionParams(
-        server_params=ServerParameters(
+        server_params=StdioServerParameters(
             command="uvx",
             args=["mcp-server-postgres", "--connection-string", "postgresql://localhost/mydb"],
         )

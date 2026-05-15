@@ -10,12 +10,12 @@ updated: 2026-05-07
 ## Overview
 NestJS authentication is composed of three stages: Passport Local (login) + RS256 JWT (token) + JwtAuthGuard (protection). Uses RS256 (asymmetric key) — sign with private key, verify with public key.
 
-## RS256 Key Generation (CMF Hub — keys/ directory)
+## RS256 Key Generation (keys/ directory)
 
 ```bash
-mkdir -p apps/server/keys
-openssl genrsa -out apps/server/keys/private.key 2048
-openssl rsa -in apps/server/keys/private.key -pubout -out apps/server/keys/public.key
+mkdir -p keys
+openssl genrsa -out keys/private.key 2048
+openssl rsa -in keys/private.key -pubout -out keys/public.key
 ```
 
 ## Core Flow
@@ -118,6 +118,23 @@ export class AuthService {
 }
 ```
 
+## UsersService.findByUsername — must re-select the password
+
+`validateUser` runs `bcrypt.compare(password, user.password)`, but the `User` entity marks `password` as `@Column({ select: false })` (see `nestjs-typeorm`). A default `findOne`/`findOneBy` returns `user.password === undefined`, so `bcrypt.compare` is always `false` and **every login fails**. The login lookup must explicitly add the password column:
+
+```typescript
+// users/users.service.ts
+findByUsername(username: string): Promise<User | null> {
+  return this.usersRepo
+    .createQueryBuilder('user')
+    .addSelect('user.password')          // select: false → must re-select for auth
+    .where('user.username = :username', { username })
+    .getOne()
+}
+```
+
+This is the only query that loads `password`; every other read keeps the `select: false` default. `validateUser` still strips it before returning (`const { password: _, ...result } = user`).
+
 ## JwtStrategy (token verification)
 
 ```typescript
@@ -165,3 +182,4 @@ export class TexturesController { ... }
 | Missing `algorithms: ['RS256']` | Explicitly specify JWT algorithm — blocks none/HS256 downgrade |
 | Including password in response object | Destructure with `const { password: _, ...result } = user` |
 | Managing keys as environment variable strings | Prefer file-based `fs.readFileSync('keys/private.key')` |
+| Login query uses default `findOne` while `password` is `@Column({ select: false })` | `user.password` is `undefined` → every login fails; `findByUsername` must `.addSelect('user.password')` |

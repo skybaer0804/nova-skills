@@ -46,7 +46,7 @@ pnpm dev
 
 ```bash
 # Runtime dependencies
-pnpm add react-query @tanstack/react-query
+pnpm add @tanstack/react-query
 
 # Development dependencies
 pnpm add -D typescript @types/react vitest

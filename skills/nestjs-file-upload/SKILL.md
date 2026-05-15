@@ -10,11 +10,11 @@ updated: 2026-05-07
 ## Overview
 File upload is processed in order: Multer (storage) → Sharp (thumbnail + metadata) → DB save. Validate mimetype first in fileFilter, and roll back uploaded files if DB save fails.
 
-## Multer Configuration + fileFilter (CMF Hub)
+## Multer Configuration + fileFilter
 
 ```typescript
 // textures/textures.controller.ts
-import { Controller, Post, UseGuards, UseInterceptors, UploadedFile, Body, BadRequestException } from '@nestjs/common'
+import { Controller, Post, UseGuards, UseInterceptors, UploadedFile, Body, Req, BadRequestException } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { diskStorage } from 'multer'
 import { extname } from 'path'
@@ -50,11 +50,14 @@ export class TexturesController {
   async upload(
     @UploadedFile() file: Express.Multer.File,
     @Body() dto: CreateTextureDto,
+    @Req() req: { user: { id: string } },   // req.user populated by AuthGuard('jwt')
   ) {
-    return this.texturesService.create(file, dto)
+    return this.texturesService.create(file, dto, req.user.id)   // uploaderId from JWT — required (NOT NULL)
   }
 }
 ```
+
+> **`file.mimetype` is client-supplied and spoofable.** The whitelist blocks honest mistakes and casual abuse, but for untrusted/public uploads also verify the file's magic bytes server-side (e.g. the `file-type` package) before processing.
 
 ## Sharp Thumbnail Generation + Rollback (TexturesService)
 
@@ -142,3 +145,5 @@ async download(@Param('id') id: string, @Res() res: Response) {
 | Using `sharp().toBuffer()` to save file | Use `.toFile(outputPath)` |
 | Inserting non-ASCII characters directly in Content-Disposition | Use `filename*=UTF-8''${encodeURIComponent(...)}` RFC 5987 |
 | Using `memoryStorage()` then saving manually | Use `diskStorage()` so Multer handles storage directly |
+| Calling `service.create(file, dto)` without the uploader id | `create(file, dto, uploaderId)` needs it (`uploader_id` is NOT NULL); pass `req.user.id` from the JWT guard |
+| Trusting `file.mimetype` as proof of content type | Client-supplied/spoofable; verify magic bytes (e.g. `file-type`) for untrusted input |

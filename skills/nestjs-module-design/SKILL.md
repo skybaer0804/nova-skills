@@ -27,7 +27,7 @@ Are you building a new NestJS feature?
 - **Do you need request data validation?** → `nestjs-validation`
   (class-validator DTO, ValidationPipe global setup)
 
-## CMF Hub Skill Combinations by Feature
+## Skill Combinations by Feature
 
 | Feature | Required Skill Combination |
 |---------|---------------------------|
@@ -35,7 +35,7 @@ Are you building a new NestJS feature?
 | Build authentication system | auth-jwt → rbac |
 | File management feature | module-structure → file-upload → typeorm |
 | Full CRUD API | module-structure → typeorm → validation → rbac |
-| Texture upload (CMF Hub full) | auth-jwt → rbac → module-structure → typeorm → file-upload → validation |
+| Full feature (auth + RBAC + upload) | auth-jwt → rbac → module-structure → typeorm → file-upload → validation |
 
 ## Common Mistakes
 

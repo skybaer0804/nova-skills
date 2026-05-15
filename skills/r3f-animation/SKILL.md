@@ -45,7 +45,7 @@ function SpringSphere() {
   const [clicked, setClicked] = useState(false)
 
   const { position } = useSpring({
-    position: clicked ? [0, 0, 0] : [0, 1.5, 0] as [number, number, number],
+    position: (clicked ? [0, 0, 0] : [0, 1.5, 0]) as [number, number, number],
     config: { mass: 1, tension: 280, friction: 20 },  // bounce config
   })
 
@@ -73,12 +73,13 @@ function GsapBox() {
 
   useEffect(() => {
     if (!meshRef.current) return
-    gsap.to(meshRef.current.rotation, {
+    const tween = gsap.to(meshRef.current.rotation, {
       y: Math.PI * 2,
       duration: 2,
       repeat: -1,
       ease: 'none',
     })
+    return () => { tween.kill() }   // stop the infinite tween on unmount / StrictMode re-run
   }, [])
 
   return (
@@ -100,3 +101,4 @@ function GsapBox() {
 | Updating React state inside a `useFrame` callback | Mutate via ref directly — `setState` triggers a re-render |
 | Fixed increment `rotation.x += 0.01` | Use `delta` — `rotation.x += delta` (frame-rate independent) |
 | Binding position to spring without `animated.mesh` | Use `animated.mesh` from `@react-spring/three` |
+| GSAP tween in `useEffect` without cleanup | Capture the tween and `tween.kill()` in the cleanup — `repeat: -1` leaks and double-runs in StrictMode |
