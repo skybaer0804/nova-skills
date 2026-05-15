@@ -115,6 +115,16 @@ export async function POST(req: NextRequest) {
 }
 ```
 
+## Security — `/api/log-event` is an unauthenticated public sink
+
+This route is reachable by anyone on the internet. Before production:
+
+- **Validate the body against a strict schema** (e.g. zod); reject unknown shapes — never pass raw `req.json()` downstream.
+- **Cap the payload size** (reject bodies over a few KB) — `req.json()` has no built-in limit.
+- **Rate-limit per IP** and prefer a same-origin check — it is unauthenticated by design.
+- **Never log the raw body unsanitized** — attacker-controlled JSON in `console.log` is a log-injection vector.
+- Treat every field as hostile input; analytics built on it can be poisoned with fake events.
+
 ## Checklist
 
 - [ ] No PII collected (no email, name, IP unless explicitly required + consented)
@@ -123,6 +133,8 @@ export async function POST(req: NextRequest) {
 - [ ] `RouteTracker` skips the initial mount (avoids double-counting first page view)
 - [ ] Event names are `snake_case` and consistent (define a naming convention)
 - [ ] Analytics behind feature flag or env var for local development
+- [ ] `/api/log-event` validates body with a schema + max size + rate limit (unauthenticated public endpoint)
+- [ ] Raw request body is never logged unsanitized (log-injection)
 
 ## Common Mistakes
 
@@ -132,3 +144,4 @@ export async function POST(req: NextRequest) {
 | Tracking on every render | Use `useEffect` with deps, not inline render calls |
 | Hardcoding endpoint URL | Use `NEXT_PUBLIC_ANALYTICS_ENDPOINT` env var |
 | Collecting user IDs without consent | Default to session IDs only; add consent gate for user IDs |
+| Shipping `/api/log-event` with no auth/validation/rate limit | It is a public sink — add schema validation, payload cap, and rate limiting before deploy |
