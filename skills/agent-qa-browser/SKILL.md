@@ -1,6 +1,6 @@
 ---
 name: agent-qa-browser
-description: Use when running QA against a localhost Next.js/NestJS app and the agent needs structured browser control, screenshot lifecycle, bug detection (console/UI/network), or DB-backed reporting — or when no Architect → Browser → Reporter handoff is in place.
+description: Use when running scenario-based QA against a localhost Next.js/NestJS app — when the agent must drive the browser, detect console/UI/network bugs, and produce a structured bug report.
 created: 2026-05-14
 updated: 2026-05-14
 ---

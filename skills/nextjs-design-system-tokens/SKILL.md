@@ -1,6 +1,6 @@
 ---
 name: nextjs-design-system-tokens
-description: Use when building a design system from scratch, migrating Figma tokens to code, structuring primitive and semantic token layers, or setting up theme switching (dark mode, brand variants).
+description: Use when building a design system from scratch, migrating Figma tokens to code, when components reference raw color/spacing values directly, or when dark mode or brand variants require duplicating values.
 created: 2026-05-04
 updated: 2026-05-09
 ---
@@ -104,16 +104,13 @@ The primitive file holds raw size/weight/line-height values only; the semantic f
 ```css
 /* styles/tokens/semantic.css — typography */
 :root {
-  /* Headings (display → h5) */
+  /* Headings — same pattern continues for h3 (24px) → h5 (18px) */
   --typography-display-size:   var(--primitive-font-size-5xl);  /* 48px */
   --typography-display-weight: var(--primitive-font-weight-bold);
   --typography-h1-size:        var(--primitive-font-size-4xl);  /* 36px */
   --typography-h1-weight:      var(--primitive-font-weight-bold);
   --typography-h2-size:        var(--primitive-font-size-3xl);  /* 30px */
   --typography-h2-weight:      var(--primitive-font-weight-semibold);
-  --typography-h3-size:        var(--primitive-font-size-2xl);  /* 24px */
-  --typography-h4-size:        var(--primitive-font-size-xl);   /* 20px */
-  --typography-h5-size:        var(--primitive-font-size-lg);   /* 18px */
 
   /* Body / subtext */
   --typography-body-size:      var(--primitive-font-size-md);   /* 16px */
@@ -157,19 +154,13 @@ Use the `-subtle` / `-bold` pattern to differentiate the same purpose color at d
 --color-text-danger:           var(--primitive-red-700);  /* error message text           */
 ```
 
-## 5. Brand Color Extraction Methodology
+## 5. Brand Color from a Logo
 
-When there is no brand color and only a logo is available:
-
-1. Export the logo as PNG (with background, 2x) — extract 3 dominant color candidates using Color Thief or `sharp` / `get-pixels + quantize`
-2. Check WCAG contrast for each candidate — contrast against white ≥ 4.5:1 (for normal text) is required
-3. If contrast fails: keep the same H+S and lower L only until the contrast threshold is met
-4. Derive a 50→900 scale from the confirmed H+S (L steps of 10%)
-5. Declare hex codes in `primitive.css` → map to purposes in semantic tokens
+No brand color, only a logo: extract a dominant color (Color Thief / `sharp`), then **check WCAG contrast**. If it fails AA (< 4.5:1 on white for body text), keep H+S and lower L until it passes. Derive a 50→900 scale from the confirmed H+S and declare it in `primitive.css`.
 
 ```
-#3182F6 = HSL(217°, 91%, 58%) → contrast against white ~3.2:1 (AA fail)
-Lowering L to 45% → ~5.2:1 (AA pass) → use this value as interactive-primary
+#3182F6 = HSL(217°, 91%, 58%) → ~3.2:1 on white (AA fail)
+Lower L to 45% → ~5.2:1 (AA pass) → use as interactive-primary
 ```
 
 ## 6. Tailwind Integration
@@ -218,31 +209,15 @@ export default config
 
 ## 7. shadcn/ui Projects
 
-shadcn/ui uses its own CSS variable system. Extend it rather than creating a separate system.
+shadcn/ui ships its own CSS-variable system. **Extend `globals.css`, don't create a parallel system** (see also `nextjs-design-token-consistency`). Add new semantic tokens in shadcn's HSL-triplet format alongside the defaults `shadcn init` already wrote (`--background`, `--foreground`, `--primary`, …):
 
 ```css
-/* app/globals.css — extend shadcn variables, do not create a separate system */
-:root {
-  /* shadcn default variables (already defined by shadcn init) */
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --border: 214.3 31.8% 91.4%;
-  --primary: 221.2 83.2% 53.3%;
-  --destructive: 0 84.2% 60.2%;
-
-  /* Additional semantic tokens — use shadcn's HSL format */
-  --surface-brand: 221.2 83.2% 53.3%;
-  --color-success: 142.1 76.2% 36.3%;
-}
+/* app/globals.css */
+--surface-brand: 221.2 83.2% 53.3%;
+--color-success: 142.1 76.2% 36.3%;
 ```
 
-```tsx
-// Using shadcn tokens
-<p className="text-muted-foreground">Secondary text</p>
-<div className="bg-background border-border">...</div>
-```
+Use the generated classes (`text-muted-foreground`, `bg-background`, `border-border`) — never raw colors.
 
 ## 8. New Token Addition Checklist
 
