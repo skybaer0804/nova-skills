@@ -41,14 +41,14 @@ bot.command('start', async ctx => {
   chatId = String(ctx.chat.id);
   writeFileSync(CHAT_ID_FILE, chatId);
   await ctx.reply(
-    `✅ 연결 완료!\nChat ID: <code>${chatId}</code>\n에이전트 알림이 여기로 전달됩니다.`,
+    `✅ Connected!\nChat ID: <code>${chatId}</code>\nAgent notifications will be delivered here.`,
     { parse_mode: 'HTML' }
   );
   console.log(`[telegram] chat ID registered: ${chatId}`);
 });
 
 bot.command('status', async ctx => {
-  await ctx.reply(`🟢 브릿지 실행 중 | Port: ${PORT} | Chat ID: ${chatId ?? '미등록'}`);
+  await ctx.reply(`🟢 Bridge running | Port: ${PORT} | Chat ID: ${chatId ?? 'unregistered'}`);
 });
 
 bot.on('callback_query:data', async ctx => {
@@ -56,12 +56,12 @@ bot.on('callback_query:data', async ctx => {
   await ctx.answerCallbackQuery();
   const pending = pendingApprovals.get(requestId);
   if (!pending) {
-    await ctx.editMessageText('⚠️ 이 요청은 만료되었습니다.');
+    await ctx.editMessageText('⚠️ This request has expired.');
     return;
   }
   clearTimeout(pending.timeout);
   pendingApprovals.delete(requestId);
-  await ctx.editMessageText(action === 'approve' ? '✅ 승인됨' : '❌ 거부됨');
+  await ctx.editMessageText(action === 'approve' ? '✅ Approved' : '❌ Rejected');
   pending.resolve(action === 'approve');
 });
 
@@ -73,7 +73,7 @@ let lastActivity = Date.now();
 bot.use((ctx, next) => { lastActivity = Date.now(); return next(); });
 setInterval(() => {
   if (Date.now() - lastActivity > 120_000)
-    console.warn('[telegram] ⚠️ 2분간 업데이트 없음 (조용한 봇이면 정상 — 메시지 송수신이 안 되면 pm2 restart)');
+    console.warn('[telegram] ⚠️ No updates for 2 min (normal for a quiet bot — if messages stop flowing, pm2 restart)');
 }, 60_000);
 
 // ── HTTP bridge (agent → bot) ──────────────────────────────────────────────────
@@ -100,7 +100,7 @@ const server = createServer((req, res) => {
 
       if (!target) {
         res.writeHead(503, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Chat ID 미등록 — 봇에게 /start 메시지를 먼저 보내세요' }));
+        res.end(JSON.stringify({ error: 'Chat ID unregistered — send /start to the bot first' }));
         return;
       }
 
@@ -109,7 +109,7 @@ const server = createServer((req, res) => {
         case '/send': {
           const text = String(data.text ?? '');
           // Always chunk: Telegram max 4096 chars per message
-          const chunks = text.match(/[\s\S]{1,4000}/g) ?? ['(빈 메시지)'];
+          const chunks = text.match(/[\s\S]{1,4000}/g) ?? ['(empty message)'];
           for (const chunk of chunks)
             await bot.api.sendMessage(target, chunk, { parse_mode: 'HTML', ...data.options });
           result = { ok: true, chunks: chunks.length };
@@ -130,13 +130,13 @@ const server = createServer((req, res) => {
           const requestId = data.request_id ?? String(Date.now());
           const timeoutMs = data.timeout_ms ?? 300_000;
           const keyboard = new InlineKeyboard()
-            .text('✅ 승인', `approve:${requestId}`)
-            .text('❌ 거부', `reject:${requestId}`);
-          await bot.api.sendMessage(target, data.prompt ?? '승인이 필요합니다.', { reply_markup: keyboard });
+            .text('✅ Approve', `approve:${requestId}`)
+            .text('❌ Reject', `reject:${requestId}`);
+          await bot.api.sendMessage(target, data.prompt ?? 'Approval required.', { reply_markup: keyboard });
           const approved = await new Promise((resolve, reject) => {
             const timeout = setTimeout(() => {
               pendingApprovals.delete(requestId);
-              reject(new Error(`승인 타임아웃 (${timeoutMs}ms)`));
+              reject(new Error(`Approval timeout (${timeoutMs}ms)`));
             }, timeoutMs);
             pendingApprovals.set(requestId, { resolve, timeout });
           });
@@ -164,13 +164,13 @@ server.listen(PORT, '127.0.0.1', () =>
 async function startWithReconnect() {
   while (true) {
     try {
-      console.log('[telegram] polling 시작…');
+      console.log('[telegram] polling started…');
       await bot.start({
         onStart: info =>
-          console.log(`[telegram] 봇 실행 중: @${info.username} — 처음이라면 /start 를 보내세요`),
+          console.log(`[telegram] bot running: @${info.username} — if this is the first time, send /start`),
       });
     } catch (err) {
-      console.error(`[telegram] polling 중단 (${err.message}) — 5초 후 재시작`);
+      console.error(`[telegram] polling stopped (${err.message}) — restarting in 5s`);
       await new Promise(r => setTimeout(r, 5000));
     }
   }

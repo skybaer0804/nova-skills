@@ -71,18 +71,18 @@ Read docs/qa-state.md and run node scripts/qa-reporter.mjs <session_id>
 ```
 Phase 1: Element validation before click
   browser_evaluate → { text, ariaLabel, visible, inViewport }
-  If result differs from expected → browser_scroll then re-check
+  If result differs from expected → browser_evaluate (el.scrollIntoView()) then re-check
   If re-check still differs → STUCK
 
 Phase 2: BEFORE screenshot
-  browser_screenshot → tmp/qa-screenshots/step{N}-before.png
+  browser_take_screenshot → tmp/qa-screenshots/step{N}-before.png
   Record in qa-state.md screenshots array
 
 Phase 3: Execute action
   browser_click(selector) or browser_type(selector, value)
 
 Phase 4: 4-way verification 🟠 HIGH
-  ① browser_screenshot → visual comparison before/after (agent judges directly)
+  ① browser_take_screenshot → visual comparison before/after (agent judges directly)
   ② browser_evaluate(expected_dom) → check if expected element exists
   ③ browser_evaluate(() => window.location.href) → URL change
   ④ browser_console_messages() + browser_network_requests()

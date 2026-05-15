@@ -57,7 +57,7 @@ grep -r "style={{" src/components --include="*.tsx" | grep -v "// ok"
 
 **2. Search for arbitrary Tailwind values:**
 ```bash
-grep -rE "\[#[0-9a-fA-F]{3,6}\]|\[([\d.]+)(px|rem|em)\]" src --include="*.tsx"
+grep -rE "\[#[0-9a-fA-F]{3,6}\]|\[[0-9.]+(px|rem|em)\]" src --include="*.tsx"
 ```
 
 **3. Check tailwind.config for available tokens:**

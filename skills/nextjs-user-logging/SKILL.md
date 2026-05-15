@@ -25,7 +25,7 @@ Track user behavior with minimal client-side overhead. Prefer Server Component i
 ```tsx
 // app/_components/web-vitals.tsx
 'use client'
-import { useReportWebVitals } from 'next/dist/client/components/use-report-web-vitals'
+import { useReportWebVitals } from 'next/web-vitals'
 
 export function WebVitals() {
   useReportWebVitals((metric) => {

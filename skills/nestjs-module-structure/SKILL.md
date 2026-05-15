@@ -61,6 +61,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Material } from './entities/material.entity'
 import { CreateMaterialDto } from './dto/create-material.dto'
+import { UpdateMaterialDto } from './dto/update-material.dto'
 
 @Injectable()
 export class MaterialsService {

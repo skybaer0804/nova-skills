@@ -43,7 +43,9 @@ Admin               Agent                       Vendor
 ## Python — Full AP2 Flow
 
 ```python
-# pip install ap2-sdk
+# pip install git+https://github.com/google-agentic-commerce/AP2.git@main
+# verify module paths and type names against current AP2 SDK docs
+# (current SDK uses ap2.sdk.* modules, not ap2.types.*)
 from ap2.types.mandate import IntentMandate, PaymentMandate, PaymentMandateContents
 from ap2.types.payment_receipt import PaymentReceipt, Success
 from ap2.types.common import PaymentItem, PaymentCurrencyAmount
