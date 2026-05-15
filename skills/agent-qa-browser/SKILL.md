@@ -9,12 +9,12 @@ updated: 2026-05-14
 
 ## Overview
 
-A 3-role agent (Architect → Browser → Reporter) directly controls the browser via Playwright MCP and performs scenario-based QA. It detects bugs and stores them in a MySQL DB + markdown report.
+A 3-role agent (Architect → Browser → Reporter) directly controls the browser via Playwright MCP and performs scenario-based QA. It detects bugs and stores them in a datastore (any DB or file store) + markdown report.
 
 ## Prerequisites
 
 ```bash
-npm run memory:up   # Start MySQL on port 3377
+# Start your reporting datastore (any DB or file store)
 # Playwright MCP must be registered in .claude/settings.local.json (see README)
 ```
 
@@ -37,7 +37,7 @@ Read docs/qa-state.md and execute the scenario
 **3. Hand off to QA Reporter:**
 ```
 Role: QA Reporter
-Read docs/qa-state.md and run node scripts/qa-reporter.mjs <session_id>
+Read docs/qa-state.md and run your report generator: <reporter> <session_id>
 ```
 
 ---
@@ -118,12 +118,12 @@ Save BUG_EVIDENCE screenshot for each bug (not a deletion target)
 
 **Procedure:**
 1. Read `docs/qa-state.md`
-2. Run `node scripts/qa-reporter.mjs <qa_session_id>`
+2. Run your report generator: `<reporter> <qa_session_id>`
 3. Output summary (step results / bugs / deferred)
 4. Ask the user:
    - "There are N deferred_bugs. Would you like to investigate them now?"
    - "Would you like to delete N screenshots (BEFORE/AFTER) from passing steps?"
-   - If approved: `node scripts/qa-reporter.mjs --clean <qa_session_id>`
+   - If approved: `<reporter> --clean <qa_session_id>`
 
 **Prohibited:** Browser manipulation, arbitrary deletion of bugs, automatic deletion of screenshots
 

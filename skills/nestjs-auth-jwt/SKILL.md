@@ -10,12 +10,12 @@ updated: 2026-05-07
 ## Overview
 NestJS authentication is composed of three stages: Passport Local (login) + RS256 JWT (token) + JwtAuthGuard (protection). Uses RS256 (asymmetric key) — sign with private key, verify with public key.
 
-## RS256 Key Generation (CMF Hub — keys/ directory)
+## RS256 Key Generation (keys/ directory)
 
 ```bash
-mkdir -p apps/server/keys
-openssl genrsa -out apps/server/keys/private.key 2048
-openssl rsa -in apps/server/keys/private.key -pubout -out apps/server/keys/public.key
+mkdir -p keys
+openssl genrsa -out keys/private.key 2048
+openssl rsa -in keys/private.key -pubout -out keys/public.key
 ```
 
 ## Core Flow

@@ -91,10 +91,9 @@ bun install
 # Run directly
 claude --channels plugin:telegram@claude-plugins-official --dangerously-skip-permissions
 
-# Register as alias (recommended)
+# Register as alias (recommended) — pick your own alias name
 # Add to ~/.zshrc:
-alias claude-tg='claude --channels plugin:telegram@claude-plugins-official --dangerously-skip-permissions'
-alias claude-dsp='claude --dangerously-skip-permissions'
+alias claude-bridge='claude --channels plugin:telegram@claude-plugins-official --dangerously-skip-permissions'
 ```
 
 `--dangerously-skip-permissions` is required to allow remote file edits and terminal execution. This assumes allowlist access control is in place.
@@ -114,25 +113,25 @@ Adding `channelsEnabled: true` to `~/.claude/settings.json` automatically skips 
 
 **Prerequisite:** `channelsEnabled: true` must be set in `~/.claude/settings.json`. Without it, the process will stall at the consent prompt on boot.
 
-**Start script** `~/bin/start-claude-tg.sh`:
+**Start script** `~/bin/start-claude-bridge.sh`:
 
 ```bash
 #!/bin/zsh
 source ~/.zshrc
 
-if /opt/homebrew/bin/tmux has-session -t claude-tg 2>/dev/null; then
+if /opt/homebrew/bin/tmux has-session -t claude-bridge 2>/dev/null; then
   exit 0
 fi
 
-/opt/homebrew/bin/tmux new-session -d -s claude-tg \
+/opt/homebrew/bin/tmux new-session -d -s claude-bridge \
   'cd ~ && source ~/.zshrc && claude --channels plugin:telegram@claude-plugins-official --dangerously-skip-permissions'
 ```
 
 ```bash
-chmod +x ~/bin/start-claude-tg.sh
+chmod +x ~/bin/start-claude-bridge.sh
 ```
 
-**LaunchAgent** `~/Library/LaunchAgents/com.<username>.claude-tg.plist`:
+**LaunchAgent** `~/Library/LaunchAgents/com.example.claude-bridge.plist`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -140,30 +139,30 @@ chmod +x ~/bin/start-claude-tg.sh
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.<username>.claude-tg</string>
+    <string>com.example.claude-bridge</string>
     <key>ProgramArguments</key>
     <array>
         <string>/bin/zsh</string>
-        <string>/Users/<username>/bin/start-claude-tg.sh</string>
+        <string>/Users/<username>/bin/start-claude-bridge.sh</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
     <key>StandardOutPath</key>
-    <string>/tmp/claude-tg.log</string>
+    <string>/tmp/claude-bridge.log</string>
     <key>StandardErrorPath</key>
-    <string>/tmp/claude-tg.log</string>
+    <string>/tmp/claude-bridge.log</string>
 </dict>
 </plist>
 ```
 
 ```bash
-launchctl load ~/Library/LaunchAgents/com.<username>.claude-tg.plist
+launchctl load ~/Library/LaunchAgents/com.example.claude-bridge.plist
 ```
 
 **Viewing and attaching to the session:**
 
 ```bash
-tmux attach -t claude-tg   # View session
+tmux attach -t claude-bridge   # View session
 # To detach: Ctrl+B → D (session stays alive)
 ```
 
@@ -174,16 +173,7 @@ tmux attach -t claude-tg   # View session
 
 ### Context sharing (CLAUDE.md)
 
-A claude-tg session started by LaunchAgent has no inherent knowledge of why it was started. Creating `~/CLAUDE.md` lets all Claude sessions starting from the home directory read it automatically:
-
-```markdown
-# Claude Code - Home Session Context
-
-This session is auto-started as a Telegram channel bot (claude-tg).
-- Start command: `claude --channels plugin:telegram@claude-plugins-official --dangerously-skip-permissions`
-- LaunchAgent: `~/Library/LaunchAgents/com.<username>.claude-tg.plist`
-- Role: Receive and process Telegram channel messages
-```
+A session started by LaunchAgent has no inherent knowledge of why it was launched. Document its purpose (start command, LaunchAgent label, role) in your project `CLAUDE.md` or `~/CLAUDE.md` so every session started from that directory reads it automatically.
 
 ### Access Control Management
 

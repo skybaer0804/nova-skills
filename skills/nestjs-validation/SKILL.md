@@ -32,7 +32,7 @@ async function bootstrap() {
 bootstrap()
 ```
 
-## CreateDto (CMF Hub — CreateTextureDto)
+## CreateDto (example: CreateTextureDto)
 
 ```typescript
 // textures/dto/create-texture.dto.ts

@@ -10,7 +10,7 @@ updated: 2026-05-07
 ## Overview
 NestJS features are built as self-contained modules separated into 4 layers: Controller / Service / Entity / DTO. Each file has a single responsibility, and the Module binds them together with the @Module decorator.
 
-## File Structure (CMF Hub — materials example)
+## File Structure (materials example)
 
 ```
 materials/

@@ -10,7 +10,7 @@ updated: 2026-05-07
 ## Overview
 In TypeORM configuration, `synchronize: true` is only used in development environments. Production environments manage schema with Migrations. PKs use UUID, and relation loading is controlled with explicit `relations` options.
 
-## TypeORM Configuration (CMF Hub)
+## TypeORM Configuration
 
 ```typescript
 // app.module.ts
@@ -29,7 +29,7 @@ TypeOrmModule.forRoot({
 })
 ```
 
-## User Entity (CMF Hub — many-to-many Role)
+## User Entity (many-to-many Role)
 
 ```typescript
 // users/entities/user.entity.ts

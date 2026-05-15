@@ -10,7 +10,7 @@ updated: 2026-05-07
 ## Overview
 File upload is processed in order: Multer (storage) → Sharp (thumbnail + metadata) → DB save. Validate mimetype first in fileFilter, and roll back uploaded files if DB save fails.
 
-## Multer Configuration + fileFilter (CMF Hub)
+## Multer Configuration + fileFilter
 
 ```typescript
 // textures/textures.controller.ts
