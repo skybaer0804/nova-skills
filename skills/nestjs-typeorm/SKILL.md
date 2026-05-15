@@ -46,7 +46,7 @@ export class User {
   username: string
 
   @Column({ select: false })               // exclude password from default queries
-  password: string
+  password: string                         // auth lookup must .addSelect('user.password') — see nestjs-auth-jwt
 
   @Column({ nullable: true })
   name: string | null
